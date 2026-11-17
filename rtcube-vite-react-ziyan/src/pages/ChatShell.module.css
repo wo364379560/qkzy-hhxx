@@ -1,0 +1,66 @@
+.shell {
+  height: 100%;
+  display: grid;
+  background: var(--cn-bg);
+  overflow: hidden;
+}
+
+.left,
+.center,
+.right {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.handle {
+  cursor: col-resize;
+  background: transparent;
+}
+
+.handle:hover {
+  background: rgba(47, 111, 237, 0.18);
+}
+
+.connectBanner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fff7e6;
+  color: #8a6116;
+  font-size: 12px;
+  border-bottom: 1px solid #f0e0b2;
+}
+
+.connectBanner button {
+  border: 0;
+  background: #f0c14b;
+  color: #3a2a00;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.emptyMain {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--cn-text-3);
+  background: linear-gradient(180deg, #eef3f9 0%, #e7eef7 100%);
+}
+
+.filesFill {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}

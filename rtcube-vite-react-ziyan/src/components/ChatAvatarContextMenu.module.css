@@ -1,0 +1,78 @@
+.menu {
+  position: fixed;
+  z-index: 1600;
+  min-width: 168px;
+  background: #f7f8fa;
+  border: 1px solid #eceff3;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+  padding: 6px 0;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 9px 16px;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.menu button:hover {
+  background: #eef2f7;
+}
+
+.menu button:disabled {
+  opacity: 0.5;
+}
+
+.icBubble,
+.icAt,
+.icCard,
+.icAdd,
+.icWarn,
+.icHide {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  display: inline-block;
+  background: #4b5563;
+  mask: no-repeat center / 16px;
+  -webkit-mask: no-repeat center / 16px;
+}
+
+.icBubble {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z'/%3E%3C/svg%3E");
+}
+
+.icAt {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 4a8 8 0 1 0 4.9 14.3l1.2 1.3A9.96 9.96 0 0 1 12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10v1.5a2.5 2.5 0 0 1-5 0V12a5 5 0 1 0-1.5 3.5 3.5 3.5 0 0 0 6.5-1.5V12c0-5.5-4.5-10-10-10zm0 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 4a8 8 0 1 0 4.9 14.3l1.2 1.3A9.96 9.96 0 0 1 12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10v1.5a2.5 2.5 0 0 1-5 0V12a5 5 0 1 0-1.5 3.5 3.5 3.5 0 0 0 6.5-1.5V12c0-5.5-4.5-10-10-10zm0 13a3 3 0 1 1 0-6 3 3 0 0 1 0 6z'/%3E%3C/svg%3E");
+}
+
+.icCard {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm2 4v2h4V8H6zm0 4v2h8v-2H6z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zm2 4v2h4V8H6zm0 4v2h8v-2H6z'/%3E%3C/svg%3E");
+}
+
+.icAdd {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-6 9v-1.5c0-2.4 2.4-4.5 6-4.5s6 2.1 6 4.5V21zm-2-8H5v-2h2V9h2v2h2z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm-6 9v-1.5c0-2.4 2.4-4.5 6-4.5s6 2.1 6 4.5V21zm-2-8H5v-2h2V9h2v2h2z'/%3E%3C/svg%3E");
+}
+
+.icWarn {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z'/%3E%3C/svg%3E");
+}
+
+.icHide {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M2 4.3 3.3 3l18 18-1.3 1.3-3.2-3.2A11 11 0 0 1 12 20C6 20 2.7 16 2 12c.3-1.7 1.2-3.4 2.5-4.8zm8.2 8.2 3.3 3.3A3 3 0 0 1 9.5 12zm1.8-8.5c6 0 9.3 4 10 8-.3 1.4-.9 2.7-1.8 3.8L18 13.6c.5-.8.8-1.7 1-2.6C18.3 8.5 15.7 6 12 6c-.7 0-1.4.1-2 .3L8.4 4.7c1.1-.5 2.3-.7 3.6-.7z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M2 4.3 3.3 3l18 18-1.3 1.3-3.2-3.2A11 11 0 0 1 12 20C6 20 2.7 16 2 12c.3-1.7 1.2-3.4 2.5-4.8zm8.2 8.2 3.3 3.3A3 3 0 0 1 9.5 12zm1.8-8.5c6 0 9.3 4 10 8-.3 1.4-.9 2.7-1.8 3.8L18 13.6c.5-.8.8-1.7 1-2.6C18.3 8.5 15.7 6 12 6c-.7 0-1.4.1-2 .3L8.4 4.7c1.1-.5 2.3-.7 3.6-.7z'/%3E%3C/svg%3E");
+}

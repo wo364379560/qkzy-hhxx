@@ -1,0 +1,59 @@
+platform :ios, '15.0'
+
+# 使用 CDN，避免全量 clone Specs 仓库
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/aliyun/aliyun-specs.git'
+
+target 'TodayToTrackRun' do
+  use_frameworks!
+
+  # 网络请求
+  pod 'Moya', '~> 15.0'
+  pod 'Alamofire', '~> 5.8'
+  pod 'AlicloudHTTPDNS', '3.4.2'
+  pod 'EMASCurl', '1.5.7'
+
+  # UI 布局
+  pod 'SnapKit', '~> 5.6.0'
+
+ # pod 'MJRefresh', '~> 3.7'
+  pod 'ZLPhotoBrowser', '~> 4.5'
+ # pod 'ProgressHUD', '~> 14.1'
+  pod 'XHToast', '~> 1.1'
+ # pod 'HandyJSON'
+  pod 'GRDB.swift'
+
+  # 高德：3D 地图（画轨迹）+ 定位 + 搜索（逆地理可选）
+  # pod 'AMapNavi'  # 导航体积大，跑步 App 不需要
+  pod 'AMap3DMap'
+  pod 'AMapSearch'
+  pod 'AMapLocation'
+#  pod 'QCloudCOSXML'  # 暂不集成
+
+  # LinLan IM / TRTC
+  pod 'TXLiteAVSDK_TRTC'
+  pod 'TXIMSDK_Plus_Swift_iOS_XCFramework', '9.0.7654'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    if target.respond_to?(:product_type) and target.product_type == "com.apple.product-type.bundle"
+      target.build_configurations.each do |config|
+        config.build_settings['CODE_SIGN_IDENTITY'] = ''
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      end
+    end
+
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+    end
+  end
+
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
+  end
+end

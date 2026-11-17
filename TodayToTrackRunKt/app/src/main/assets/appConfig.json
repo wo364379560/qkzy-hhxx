@@ -1,0 +1,6 @@
+{
+  "domainPool": {
+    "apiOrigins": ["https://api.ruizhihe.com", "https://api.prfgsu.com", "https://api.uktjwg.cn"],
+    "configOrigins": ["https://api.ruizhihe.com", "https://api.prfgsu.com", "https://api.uktjwg.cn", "https://api1.prfgsu.com", "https://api1.uktjwg.cn"]
+  }
+}

@@ -1,0 +1,95 @@
+.pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--cn-panel);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  min-height: 48px;
+  border-bottom: 1px solid var(--cn-border);
+  background: #fff;
+}
+
+.titleBtn {
+  border: 0;
+  background: transparent;
+  text-align: center;
+  padding: 0;
+  color: inherit;
+  min-width: 0;
+  flex: 1;
+}
+
+.titleBtn strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cn-text-3);
+}
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.iconBtn img {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.shousuo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: invert(1);
+  mix-blend-mode: multiply;
+}
+
+.iconBtn:hover {
+  background: var(--cn-panel-2);
+}
+
+.toggle {
+  border: 1px solid var(--cn-border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--cn-text-2);
+}
+
+.empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: var(--cn-text-3);
+  font-size: 14px;
+  background: linear-gradient(180deg, #eef3f9 0%, #e7eef7 100%);
+}

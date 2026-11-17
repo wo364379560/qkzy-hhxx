@@ -1,0 +1,46 @@
+.popup {
+  position: absolute;
+  left: 12px;
+  right: auto;
+  bottom: calc(100% + 6px);
+  width: 380px;
+  max-width: calc(100% - 24px);
+  max-height: 260px;
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--cn-border);
+  padding: 10px 8px;
+  z-index: 40;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+
+.btn {
+  border: none;
+  background: #f7f7f7;
+  border-radius: 8px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.btn img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.empty {
+  text-align: center;
+  color: var(--cn-text-3);
+  font-size: 12px;
+  padding: 16px 8px;
+}

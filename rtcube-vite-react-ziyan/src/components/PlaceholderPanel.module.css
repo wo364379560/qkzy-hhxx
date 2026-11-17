@@ -1,0 +1,84 @@
+.pane {
+  height: 100%;
+  padding: 20px 18px;
+  background: var(--cn-panel-2);
+  border-right: 1px solid var(--cn-border);
+  overflow: auto;
+}
+
+.pane h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.desc {
+  margin: 0 0 16px;
+  color: var(--cn-text-3);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.row input {
+  flex: 1;
+  height: 36px;
+  border: 1px solid var(--cn-border);
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.row button {
+  border: 0;
+  background: var(--cn-accent);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0 14px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #e8eef6;
+  font-size: 14px;
+}
+
+.useBtn {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.useBtn:hover {
+  color: var(--cn-accent);
+}
+
+.list button {
+  border: 0;
+  background: transparent;
+  color: var(--cn-danger);
+  font-size: 12px;
+}
+
+.empty {
+  color: var(--cn-text-3);
+  justify-content: center !important;
+}

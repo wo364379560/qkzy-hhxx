@@ -1,0 +1,82 @@
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: #111;
+  user-select: none;
+  cursor: crosshair;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.shade,
+.frame {
+  position: fixed;
+  pointer-events: none;
+}
+
+.shade {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.frame {
+  box-shadow: 0 0 0 1.5px #4c9fff inset;
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 8px 14px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.bar {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.bar button {
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cancel {
+  background: #fff;
+  color: #333;
+}
+
+.ok {
+  background: var(--cn-accent, #2b6de5);
+  color: #fff;
+}

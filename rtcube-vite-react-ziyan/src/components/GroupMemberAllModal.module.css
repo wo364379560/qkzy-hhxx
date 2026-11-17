@@ -1,0 +1,111 @@
+.mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1450;
+  background: rgba(16, 24, 40, 0.4);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modal {
+  width: min(420px, 100%);
+  height: min(560px, 86vh);
+  background: #fff;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.head h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.head button {
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  color: #999;
+}
+
+.search {
+  padding: 10px 14px;
+}
+
+.search input {
+  width: 100%;
+  height: 36px;
+  border: 0;
+  border-radius: 18px;
+  background: #f3f4f6;
+  padding: 0 14px;
+  outline: none;
+}
+
+.list {
+  flex: 1;
+  overflow: auto;
+  padding: 0 8px 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: context-menu;
+}
+
+.row:hover {
+  background: #f5f7fb;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #dbe4f0;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.row strong {
+  display: block;
+  font-size: 14px;
+}
+
+.row em {
+  font-style: normal;
+  font-size: 12px;
+  color: #9aa0a6;
+}
+
+.more,
+.empty {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 12px;
+  color: #888;
+  font-size: 13px;
+}

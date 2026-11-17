@@ -1,0 +1,148 @@
+.wrap {
+  position: relative;
+  z-index: 6;
+  flex-shrink: 0;
+}
+
+.bar {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  background: #fff6dc;
+}
+
+.barMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.caretBtn {
+  width: 36px;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mark {
+  width: 4px;
+  align-self: stretch;
+  background: #8b6914;
+  flex-shrink: 0;
+  border-radius: 0 2px 2px 0;
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #5c4a1f;
+  line-height: 1.4;
+}
+
+.caret {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid #9aa0a6;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.caretOpen {
+  transform: none;
+}
+
+.panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--cn-border);
+}
+
+.panelHead {
+  padding: 10px 14px 6px;
+  font-size: 13px;
+  color: #9aa0a6;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowMain b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+}
+
+.rowMain span {
+  font-size: 13px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #2f7dff;
+  font-size: 13px;
+  padding: 4px 2px;
+}
+
+.fold {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+  padding: 8px;
+  font-size: 13px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}

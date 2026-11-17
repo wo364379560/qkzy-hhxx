@@ -1,0 +1,57 @@
+:root {
+  --cn-bg: #e8edf3;
+  --cn-panel: #ffffff;
+  --cn-panel-2: #f3f6fa;
+  --cn-border: #d5dde8;
+  --cn-text: #1c2430;
+  --cn-text-2: #5b677a;
+  --cn-text-3: #8a96a8;
+  --cn-accent: #2f6fed;
+  --cn-accent-soft: #e8f0ff;
+  --cn-danger: #d94848;
+  --cn-self-bubble: #c9e7ff;
+  --cn-peer-bubble: #ffffff;
+  --cn-shadow: 0 8px 28px rgba(28, 36, 48, 0.08);
+  --cn-radius: 10px;
+  --font-ui: 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--cn-text);
+  background: var(--cn-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c5cedb;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -1,0 +1,33 @@
+@import "./web";
+@import "./h5";
+@import "../../../../assets/styles/common";
+
+.delete-friend-dialog-title {
+  margin: 0;
+  color: #333;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.tui-contact-info-owner-bind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin-left: 10px;
+  padding: 0 10px;
+  border: 1px solid #006eff;
+  border-radius: 4px;
+  background: #fff;
+  color: #006eff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tui-contact-info-owner-bind:disabled {
+  border-color: #c9cdd4;
+  color: #8a8f99;
+  cursor: not-allowed;
+}

@@ -1,0 +1,110 @@
+.scroller {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  position: relative;
+}
+
+.phantom {
+  position: relative;
+  width: 100%;
+}
+
+.window {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+.row {
+  height: 48px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 12px;
+  cursor: context-menu;
+}
+
+.row:hover {
+  background: rgba(47, 111, 237, 0.06);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  padding: 0;
+}
+
+.kick {
+  border: 0;
+  background: transparent;
+  color: var(--cn-danger);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.kick:hover {
+  background: rgba(217, 72, 72, 0.1);
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #d0d8e6;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.name {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role {
+  font-size: 11px;
+  color: var(--cn-accent);
+  background: var(--cn-accent-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.empty,
+.loading,
+.tip {
+  padding: 12px;
+  text-align: center;
+  color: var(--cn-text-3);
+  font-size: 12px;
+}

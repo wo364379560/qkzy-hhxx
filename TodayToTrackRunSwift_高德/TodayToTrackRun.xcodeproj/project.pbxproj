@@ -1,0 +1,777 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CC79F547EA4B7EB5A47960D5 /* Pods_TodayToTrackRun.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5FC6CE05D3839B86871C1805 /* Pods_TodayToTrackRun.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		73B37AEF30038A06004F83D1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 73B37AD030038A05004F83D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 73B37AD730038A05004F83D1;
+			remoteInfo = TodayToTrackRun;
+		};
+		73B37AF930038A06004F83D1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 73B37AD030038A05004F83D1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 73B37AD730038A05004F83D1;
+			remoteInfo = TodayToTrackRun;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0C4533E1581A54C50EF2C1A0 /* Pods-TodayToTrackRun.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TodayToTrackRun.debug.xcconfig"; path = "Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun.debug.xcconfig"; sourceTree = "<group>"; };
+		5FC6CE05D3839B86871C1805 /* Pods_TodayToTrackRun.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TodayToTrackRun.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6BADD678C728A5CA4C324707 /* Pods-TodayToTrackRun.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TodayToTrackRun.release.xcconfig"; path = "Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun.release.xcconfig"; sourceTree = "<group>"; };
+		73B37AD830038A05004F83D1 /* TodayToTrackRun.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TodayToTrackRun.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		73B37AEE30038A06004F83D1 /* TodayToTrackRunTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TodayToTrackRunTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		73B37AF830038A06004F83D1 /* TodayToTrackRunUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TodayToTrackRunUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		73B37B0030038A06004F83D1 /* Exceptions for "TodayToTrackRun" folder in "TodayToTrackRun" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 73B37AD730038A05004F83D1 /* TodayToTrackRun */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		73B37ADA30038A05004F83D1 /* TodayToTrackRun */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				73B37B0030038A06004F83D1 /* Exceptions for "TodayToTrackRun" folder in "TodayToTrackRun" target */,
+			);
+			path = TodayToTrackRun;
+			sourceTree = "<group>";
+		};
+		73B37AF130038A06004F83D1 /* TodayToTrackRunTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TodayToTrackRunTests;
+			sourceTree = "<group>";
+		};
+		73B37AFB30038A06004F83D1 /* TodayToTrackRunUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = TodayToTrackRunUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		73B37AD530038A05004F83D1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC79F547EA4B7EB5A47960D5 /* Pods_TodayToTrackRun.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AEB30038A06004F83D1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AF530038A06004F83D1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		73B37ACF30038A05004F83D1 = {
+			isa = PBXGroup;
+			children = (
+				73B37ADA30038A05004F83D1 /* TodayToTrackRun */,
+				73B37AF130038A06004F83D1 /* TodayToTrackRunTests */,
+				73B37AFB30038A06004F83D1 /* TodayToTrackRunUITests */,
+				73B37AD930038A05004F83D1 /* Products */,
+				8DF8D5D4E207101C7D82155C /* Pods */,
+				C245180551768A03FA9594EF /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		73B37AD930038A05004F83D1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				73B37AD830038A05004F83D1 /* TodayToTrackRun.app */,
+				73B37AEE30038A06004F83D1 /* TodayToTrackRunTests.xctest */,
+				73B37AF830038A06004F83D1 /* TodayToTrackRunUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8DF8D5D4E207101C7D82155C /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				0C4533E1581A54C50EF2C1A0 /* Pods-TodayToTrackRun.debug.xcconfig */,
+				6BADD678C728A5CA4C324707 /* Pods-TodayToTrackRun.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		C245180551768A03FA9594EF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				5FC6CE05D3839B86871C1805 /* Pods_TodayToTrackRun.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		73B37AD730038A05004F83D1 /* TodayToTrackRun */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73B37B0130038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRun" */;
+			buildPhases = (
+				24F7934515FAAB6BEF356E90 /* [CP] Check Pods Manifest.lock */,
+				73B37AD430038A05004F83D1 /* Sources */,
+				73B37AD530038A05004F83D1 /* Frameworks */,
+				73B37AD630038A05004F83D1 /* Resources */,
+				3DCF7DA96591E0111182F1AA /* [CP] Embed Pods Frameworks */,
+				0B882C6DEE319120F673CE30 /* [CP] Copy Pods Resources */,
+				CB600B3FF6A3CD329128F3B8 /* Prepare Rui HTTPDNS */,
+				622819F297204E1C65CEBCF4 /* Fix Privacy Manifest */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				73B37ADA30038A05004F83D1 /* TodayToTrackRun */,
+			);
+			name = TodayToTrackRun;
+			productName = TodayToTrackRun;
+			productReference = 73B37AD830038A05004F83D1 /* TodayToTrackRun.app */;
+			productType = "com.apple.product-type.application";
+		};
+		73B37AED30038A06004F83D1 /* TodayToTrackRunTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73B37B0630038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRunTests" */;
+			buildPhases = (
+				73B37AEA30038A06004F83D1 /* Sources */,
+				73B37AEB30038A06004F83D1 /* Frameworks */,
+				73B37AEC30038A06004F83D1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				73B37AF030038A06004F83D1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				73B37AF130038A06004F83D1 /* TodayToTrackRunTests */,
+			);
+			name = TodayToTrackRunTests;
+			productName = TodayToTrackRunTests;
+			productReference = 73B37AEE30038A06004F83D1 /* TodayToTrackRunTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		73B37AF730038A06004F83D1 /* TodayToTrackRunUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 73B37B0930038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRunUITests" */;
+			buildPhases = (
+				73B37AF430038A06004F83D1 /* Sources */,
+				73B37AF530038A06004F83D1 /* Frameworks */,
+				73B37AF630038A06004F83D1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				73B37AFA30038A06004F83D1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				73B37AFB30038A06004F83D1 /* TodayToTrackRunUITests */,
+			);
+			name = TodayToTrackRunUITests;
+			productName = TodayToTrackRunUITests;
+			productReference = 73B37AF830038A06004F83D1 /* TodayToTrackRunUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		73B37AD030038A05004F83D1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					73B37AD730038A05004F83D1 = {
+						CreatedOnToolsVersion = 26.3;
+						SystemCapabilities = {
+							com.apple.Push = {
+								enabled = 1;
+							};
+						};
+					};
+					73B37AED30038A06004F83D1 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 73B37AD730038A05004F83D1;
+					};
+					73B37AF730038A06004F83D1 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 73B37AD730038A05004F83D1;
+					};
+				};
+			};
+			buildConfigurationList = 73B37AD330038A05004F83D1 /* Build configuration list for PBXProject "TodayToTrackRun" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 73B37ACF30038A05004F83D1;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 73B37AD930038A05004F83D1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				73B37AD730038A05004F83D1 /* TodayToTrackRun */,
+				73B37AED30038A06004F83D1 /* TodayToTrackRunTests */,
+				73B37AF730038A06004F83D1 /* TodayToTrackRunUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		73B37AD630038A05004F83D1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AEC30038A06004F83D1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AF630038A06004F83D1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0B882C6DEE319120F673CE30 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		24F7934515FAAB6BEF356E90 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-TodayToTrackRun-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3DCF7DA96591E0111182F1AA /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-TodayToTrackRun/Pods-TodayToTrackRun-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		622819F297204E1C65CEBCF4 /* Fix Privacy Manifest */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Fix Privacy Manifest";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PROJECT_DIR}/app_privacy_manifest_fixer/fixer.sh\" ";
+			showEnvVarsInLog = 0;
+		};
+		CB600B3FF6A3CD329128F3B8 /* Prepare Rui HTTPDNS */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Prepare Rui HTTPDNS";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/RuiHTTPDNS.private.plist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "python3 \"${SRCROOT}/scripts/prepare_httpdns.py\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		73B37AD430038A05004F83D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AEA30038A06004F83D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		73B37AF430038A06004F83D1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		73B37AF030038A06004F83D1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 73B37AD730038A05004F83D1 /* TodayToTrackRun */;
+			targetProxy = 73B37AEF30038A06004F83D1 /* PBXContainerItemProxy */;
+		};
+		73B37AFA30038A06004F83D1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 73B37AD730038A05004F83D1 /* TodayToTrackRun */;
+			targetProxy = 73B37AF930038A06004F83D1 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		73B37B0230038A06004F83D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0C4533E1581A54C50EF2C1A0 /* Pods-TodayToTrackRun.debug.xcconfig */;
+			buildSettings = {
+				APNS_ENVIRONMENT = development;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TodayToTrackRun/TodayToTrackRun.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 4YMGP7GWXH;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayToTrackRun/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "睿之禾";
+				INFOPLIST_KEY_NSCameraUsageDescription = "睿之禾您需要使用您的相机,用来拍照发送图片/保存图片使用，您是否允许使用？如果您拒绝将无法访问您的相机功能！";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "睿之禾需要访问您的位置权限,用来定位您当前位置和记录跑步轨迹并在后台持续更新位置。,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "睿之禾需要访问您的位置权限,用来定位您当前位置和记录跑步轨迹并在后台持续更新位置。,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "睿之禾需要访问您的位置权限,需要定位权限以记录跑步轨迹并在地图上展示路径,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "睿之禾您需要使用您的麦克风,用来聊天的时候，录音发送语音/拨打音视频使用，您是否允许使用？如果您拒绝将无法使用语音!";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "睿之禾需要相册写入权限，用于保存聊天内图片至本地相册；建议选择【允许访问所有照片】，若仅选择部分照片，后续聊天图片将无法正常保存";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "睿之禾需要用到您的相册权限，用来聊天发送图片/视频使用，请 【允许访问所有照片】，以保证在‌此应用中能正常访问相册，如果您使用【选择照片】，则所有未选中的，以及未来新增的照片都将无法在‌此应用中访问";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1.6;
+				PRODUCT_BUNDLE_IDENTIFIER = com.balabalaim.gcloud.tim.push.appdev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = hezhiruiAppstore;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TodayToTrackRun/RuiNetwork-Bridging-Header.h";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		73B37B0330038A06004F83D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6BADD678C728A5CA4C324707 /* Pods-TodayToTrackRun.release.xcconfig */;
+			buildSettings = {
+				APNS_ENVIRONMENT = production;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TodayToTrackRun/TodayToTrackRun.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 17;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 4YMGP7GWXH;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TodayToTrackRun/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "睿之禾";
+				INFOPLIST_KEY_NSCameraUsageDescription = "睿之禾您需要使用您的相机,用来拍照发送图片/保存图片使用，您是否允许使用？如果您拒绝将无法访问您的相机功能！";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "睿之禾需要访问您的位置权限,用来定位您当前位置和记录跑步轨迹并在后台持续更新位置。,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "睿之禾需要访问您的位置权限,用来定位您当前位置和记录跑步轨迹并在后台持续更新位置。,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "睿之禾需要访问您的位置权限,需要定位权限以记录跑步轨迹并在地图上展示路径,您是否允许访问?如果您拒绝将无法访问您的定位!";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "睿之禾您需要使用您的麦克风,用来聊天的时候，录音发送语音/拨打音视频使用，您是否允许使用？如果您拒绝将无法使用语音!";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "睿之禾需要相册写入权限，用于保存聊天内图片至本地相册；建议选择【允许访问所有照片】，若仅选择部分照片，后续聊天图片将无法正常保存";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "睿之禾需要用到您的相册权限，用来聊天发送图片/视频使用，请 【允许访问所有照片】，以保证在‌此应用中能正常访问相册，如果您使用【选择照片】，则所有未选中的，以及未来新增的照片都将无法在‌此应用中访问";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1.6;
+				PRODUCT_BUNDLE_IDENTIFIER = com.balabalaim.gcloud.tim.push.appdev;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = hezhiruiAppstore;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "TodayToTrackRun/RuiNetwork-Bridging-Header.h";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		73B37B0430038A06004F83D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		73B37B0530038A06004F83D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		73B37B0730038A06004F83D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yunxietongapp.app.TodayToTrackRunTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TodayToTrackRun.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TodayToTrackRun";
+			};
+			name = Debug;
+		};
+		73B37B0830038A06004F83D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yunxietongapp.app.TodayToTrackRunTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TodayToTrackRun.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/TodayToTrackRun";
+			};
+			name = Release;
+		};
+		73B37B0A30038A06004F83D1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yunxietongapp.app.TodayToTrackRunUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TodayToTrackRun;
+			};
+			name = Debug;
+		};
+		73B37B0B30038A06004F83D1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 89HZJ6Y473;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yunxietongapp.app.TodayToTrackRunUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TodayToTrackRun;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		73B37AD330038A05004F83D1 /* Build configuration list for PBXProject "TodayToTrackRun" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B37B0430038A06004F83D1 /* Debug */,
+				73B37B0530038A06004F83D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		73B37B0130038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRun" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B37B0230038A06004F83D1 /* Debug */,
+				73B37B0330038A06004F83D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		73B37B0630038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRunTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B37B0730038A06004F83D1 /* Debug */,
+				73B37B0830038A06004F83D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		73B37B0930038A06004F83D1 /* Build configuration list for PBXNativeTarget "TodayToTrackRunUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				73B37B0A30038A06004F83D1 /* Debug */,
+				73B37B0B30038A06004F83D1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 73B37AD030038A05004F83D1 /* Project object */;
+}

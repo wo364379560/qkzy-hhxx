@@ -1,0 +1,52 @@
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 28, 40, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.dialog {
+  width: min(420px, calc(100vw - 32px));
+  background: var(--cn-panel);
+  border-radius: 14px;
+  padding: 22px 22px 18px;
+  box-shadow: var(--cn-shadow);
+}
+
+.dialog h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.dialog p {
+  margin: 0;
+  color: var(--cn-text-2);
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.ghost,
+.primary {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+.ghost {
+  background: var(--cn-panel-2);
+  color: var(--cn-text-2);
+}
+
+.primary {
+  background: var(--cn-accent);
+  color: #fff;
+}

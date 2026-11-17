@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS user_refresh_sessions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  user_id BIGINT UNSIGNED NOT NULL COMMENT '关联 users.id',
+  refresh_token_hash CHAR(64) NOT NULL COMMENT 'refresh token 的 SHA-256 哈希',
+  device_id VARCHAR(128) NOT NULL DEFAULT '' COMMENT '客户端设备标识',
+  device_name VARCHAR(128) NOT NULL DEFAULT '' COMMENT '设备名称',
+  platform VARCHAR(32) NOT NULL DEFAULT '' COMMENT '平台标识，如 ios/android/web',
+  app_version VARCHAR(64) NOT NULL DEFAULT '' COMMENT '客户端版本',
+  ip VARCHAR(64) NOT NULL DEFAULT '' COMMENT '最近一次使用 IP',
+  user_agent VARCHAR(512) NOT NULL DEFAULT '' COMMENT '最近一次使用 User-Agent',
+  last_used_at DATETIME NOT NULL COMMENT '最近一次使用时间',
+  expires_at DATETIME NOT NULL COMMENT 'refresh session 过期时间',
+  revoked_at DATETIME NULL COMMENT '撤销时间，为空表示仍有效',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_user_refresh_sessions_refresh_token_hash (refresh_token_hash),
+  KEY idx_user_refresh_sessions_user_id (user_id),
+  KEY idx_user_refresh_sessions_expires_at (expires_at),
+  KEY idx_user_refresh_sessions_revoked_at (revoked_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

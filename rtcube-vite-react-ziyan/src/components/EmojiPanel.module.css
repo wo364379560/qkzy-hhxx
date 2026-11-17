@@ -1,0 +1,40 @@
+.popup {
+  position: absolute;
+  left: 12px;
+  right: auto;
+  bottom: calc(100% + 6px);
+  width: 360px;
+  max-width: calc(100% - 24px);
+  max-height: 220px;
+  overflow: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--cn-border);
+  padding: 10px 8px;
+  z-index: 40;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.btn {
+  border: none;
+  background: #f7f7f7;
+  border-radius: 6px;
+  aspect-ratio: 1;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.btn img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}

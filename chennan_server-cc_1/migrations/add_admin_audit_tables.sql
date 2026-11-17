@@ -1,0 +1,43 @@
+CREATE TABLE admin_access_audits (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_user_id INT UNSIGNED NULL,
+    admin_username VARCHAR(64) NOT NULL DEFAULT '',
+    admin_role VARCHAR(32) NOT NULL DEFAULT '',
+    access_type VARCHAR(32) NOT NULL COMMENT 'system_user | illegal_access',
+    method VARCHAR(16) NOT NULL,
+    route VARCHAR(191) NOT NULL,
+    target_id INT UNSIGNED NULL,
+    success BOOLEAN NOT NULL DEFAULT FALSE,
+    status_code INT NOT NULL DEFAULT 0,
+    ip_address VARCHAR(64) NOT NULL DEFAULT '',
+    user_agent VARCHAR(255) NOT NULL DEFAULT '',
+    failure_reason VARCHAR(255) NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_admin_user_id (admin_user_id),
+    KEY idx_admin_role (admin_role),
+    KEY idx_access_type (access_type),
+    KEY idx_method (method),
+    KEY idx_route (route),
+    KEY idx_target_id (target_id),
+    KEY idx_success (success),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台访问审计';
+
+CREATE TABLE admin_login_audits (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_user_id INT UNSIGNED NULL,
+    username VARCHAR(64) NOT NULL DEFAULT '',
+    admin_role VARCHAR(32) NOT NULL DEFAULT '',
+    stage VARCHAR(32) NOT NULL COMMENT 'password | totp_setup | totp_verify',
+    result VARCHAR(32) NOT NULL COMMENT 'success | failed | require_totp_setup | require_totp_verify',
+    failure_reason VARCHAR(255) NOT NULL DEFAULT '',
+    ip_address VARCHAR(64) NOT NULL DEFAULT '',
+    user_agent VARCHAR(255) NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_admin_user_id (admin_user_id),
+    KEY idx_username (username),
+    KEY idx_admin_role (admin_role),
+    KEY idx_stage (stage),
+    KEY idx_result (result),
+    KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='后台登录审计';

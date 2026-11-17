@@ -1,0 +1,214 @@
+.card,
+.mini {
+  position: fixed;
+  z-index: 1200;
+  background: #1b2433;
+  color: #eef3fb;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35);
+  pointer-events: auto;
+}
+
+.card {
+  width: 340px;
+  padding: 0 16px 16px;
+  text-align: center;
+}
+
+.videoCard {
+  width: 480px;
+}
+
+.maxCard {
+  width: min(720px, calc(100vw - 32px));
+}
+
+.maxCard .videoStage {
+  height: min(420px, 48vh);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 -16px 8px;
+  padding: 8px 12px 6px;
+  cursor: move;
+  user-select: none;
+  border-radius: 16px 16px 0 0;
+  background: #222c3d;
+}
+
+.bar em {
+  font-style: normal;
+  font-size: 11px;
+  color: #7d8aa0;
+}
+
+.winBtns {
+  display: flex;
+  gap: 4px;
+}
+
+.winBtns button {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 6px;
+  background: #334155;
+  color: #eef3fb;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.winBtns button:hover {
+  background: #475569;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.status {
+  margin: 8px 0 16px;
+  color: #a9b6c9;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ok,
+.danger,
+.secondary,
+.on {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.ok {
+  background: #22a06b;
+}
+
+.danger {
+  background: #d94848;
+}
+
+.videoStage {
+  position: relative;
+  height: 220px;
+  margin: 0 0 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b1220;
+}
+
+.videoStage[hidden] {
+  display: none !important;
+}
+
+.remoteView,
+.localView {
+  width: 100%;
+  height: 100%;
+}
+
+.remoteView :global(div),
+.localView :global(div) {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.remoteView video,
+.localView video,
+.remoteView :global(video),
+.localView :global(video) {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+  background: #0b1220;
+}
+
+.localView video {
+  pointer-events: none;
+}
+
+.localView {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 88px;
+  height: 118px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: #1e293b;
+  cursor: grab;
+  z-index: 2;
+}
+
+.localView:active {
+  cursor: grabbing;
+}
+
+.secondary {
+  background: #334155;
+}
+
+.on {
+  background: #2563eb;
+}
+
+.mini {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  padding: 8px 10px;
+  cursor: move;
+}
+
+.miniMain {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.miniMain strong,
+.miniMain span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miniMain strong {
+  font-size: 13px;
+}
+
+.miniMain span {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #a9b6c9;
+}
+
+.miniHang {
+  border: 0;
+  border-radius: 999px;
+  background: #d94848;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+}
