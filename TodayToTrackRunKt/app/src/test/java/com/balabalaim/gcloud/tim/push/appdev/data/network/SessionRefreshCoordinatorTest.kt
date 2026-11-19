@@ -73,6 +73,23 @@ class SessionRefreshCoordinatorTest {
         assertEquals(initial, state.get())
     }
 
+    @Test fun temporaryStatusCodesNeverClearBusinessSession() = runBlocking {
+        for (status in listOf(429, 500, 502, 503, 504)) {
+            val state = AtomicReference(initial)
+            runCatching { coordinator(state) { throw ApiException("temporary", status = status, providerCode = "SESSION_TEMPORARY") }.refresh() }
+            assertEquals(initial, state.get())
+        }
+    }
+
+    @Test fun lateInvalidRefreshCannotClearOrRejectNewLogin() = runBlocking {
+        val state = AtomicReference(initial)
+        val entered = CompletableDeferred<Unit>(); val release = CompletableDeferred<Unit>()
+        val manager = coordinator(state) { entered.complete(Unit); release.await(); throw ApiException("invalid", unauthorized = true, status = 401, providerCode = "SESSION_REVOKED") }
+        val result = async { manager.refresh() }
+        entered.await(); state.set(refreshed); release.complete(Unit)
+        assertEquals(refreshed, result.await()); assertEquals(refreshed, state.get())
+    }
+
     @Test fun emptyOrMalformedTokenNeverProducesBearerOnlyHeader() {
         listOf("", "  ", "Bearer duplicate", "token\nvalue").forEach { token ->
             assertTrue(runCatching { AccessTokenPolicy.header(token) }.exceptionOrNull() is ApiException)

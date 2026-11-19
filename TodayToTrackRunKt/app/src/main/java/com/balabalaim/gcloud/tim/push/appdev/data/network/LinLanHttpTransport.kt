@@ -8,10 +8,10 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
 
-/** Retry/failover belongs to the caller, where method, session and deadline are known. */
+/** Connection-address fallback is safe before send; sent writes are always one-shot. */
 internal object LinLanHttpTransport {
     fun configure(builder: OkHttpClient.Builder): OkHttpClient.Builder = builder
-        .retryOnConnectionFailure(false)
+        .retryOnConnectionFailure(true)
         .followRedirects(false)
         .followSslRedirects(false)
         .authenticator(Authenticator.NONE)
@@ -34,9 +34,11 @@ internal object LinLanHttpTransport {
         }
         .addNetworkInterceptor { chain ->
             val response = chain.proceed(chain.request())
-            // OkHttp 4.12 retries 503/Retry-After:0 even with connection retry disabled.
-            // Shield it inside its follow-up layer, then restore it outside that layer.
-            if (response.code == 503 && response.header("Retry-After")?.matches(Regex("0+")) == true) {
+            // Prevent status-code follow-ups for 408 and 503 while allowing address
+            // fallback on connection failure before a one-shot business body was sent.
+            // Restore the exact original headers outside OkHttp's follow-up layer.
+            if ((response.code == 503 && response.header("Retry-After")?.matches(Regex("0+")) == true) ||
+                (response.code == 408 && (response.header("Retry-After") == null || response.header("Retry-After")?.matches(Regex("0+")) == true))) {
                 chain.request().tag(CallState::class.java)!!.retryAfter = response.headers.values("Retry-After")
                 response.newBuilder().header("Retry-After", "1").build()
             } else response

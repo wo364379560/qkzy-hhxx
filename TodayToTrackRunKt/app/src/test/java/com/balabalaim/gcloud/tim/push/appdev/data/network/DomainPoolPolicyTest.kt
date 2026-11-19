@@ -1,6 +1,7 @@
 package com.balabalaim.gcloud.tim.push.appdev.data.network
 
 import okhttp3.Dns
+import com.balabalaim.gcloud.tim.push.appdev.core.LinLanAppConstants
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -8,11 +9,41 @@ import java.net.InetAddress
 import java.net.UnknownHostException
 
 class DomainPoolPolicyTest {
+    @Test fun productionProbePathMatchesAnonymousBackendRoute() {
+        assertEquals("/api/v1/chat/ping", LinLanAppConstants.PROBE_PATH)
+        assertEquals("/api/v1/public/bootstrap/domain-pool", LinLanAppConstants.BOOTSTRAP_PATH)
+    }
     private fun systemDns(resolve: () -> List<InetAddress>) = object : Dns {
         override fun lookup(hostname: String) = resolve()
     }
     private fun body(version: Int, origin: String = "https://api1.prfgsu.com") =
         """{"code":0,"data":{"version":$version,"ttl_seconds":3600,"api_origins":["$origin"]}}"""
+
+    @Test fun currentV4PoolAcceptsCDNsWithoutBroadeningBootstrapOrHTTPDNS() {
+        val origins = listOf("https://api.prfgsu.com", "https://api.uktjwg.cn", "https://api1.prfgsu.com", "https://api1.uktjwg.cn", "https://cdnapi1.sazuts.cn", "https://cdnapi2.sazuts.cn")
+        val json = JSONObject().put("version", 4).put("ttl_seconds", 600).put("api_origins", org.json.JSONArray(origins))
+        val pool = DomainPoolPolicy.parseDocument(json)!!
+        assertEquals(origins, pool.origins)
+        assertFalse(pool.origins.contains(DomainPoolPolicy.seeds.first()))
+        assertEquals(5, DomainPoolPolicy.bootstrapOrigins.size)
+        assertEquals(4, DomainPoolPolicy.httpDnsHosts.size)
+        assertFalse(DomainPoolPolicy.httpDnsHosts.any { it.endsWith("sazuts.cn") })
+        assertEquals(pool, DomainPoolPolicy.parseDocument(JSONObject(pool.toJSON())))
+        assertNull(DomainPoolPolicy.parseDocument(JSONObject(json.toString()).put("api_origins", org.json.JSONArray(origins + "https://cdnapi3.sazuts.cn"))))
+        assertTrue(DomainPoolPolicy.usableCache(100, 86_400_100))
+        assertFalse(DomainPoolPolicy.usableCache(100, 86_400_101))
+        assertFalse(DomainPoolPolicy.usableCache(100, 99))
+    }
+
+    @Test fun signedLookupExceptionOrTimeoutFallsBackAndReportsTheStage() {
+        val public = InetAddress.getByName("8.8.8.8")
+        for (error in listOf(UnknownHostException(), java.net.SocketTimeoutException())) {
+            val stages = mutableListOf<String>()
+            val resolver = ScopedHttpDns({ throw error }, systemDns { listOf(public) }, { _, stage, _ -> stages += stage })
+            assertEquals(listOf(public), resolver.lookup("api.prfgsu.com"))
+            assertEquals(listOf("httpdns_failed", "system_dns_fallback"), stages)
+        }
+    }
 
     @Test fun formalRoutesBootstrapAndResolverHaveIndependentScopes() {
         assertEquals(listOf("https://api.ruizhihe.com", "https://api.prfgsu.com", "https://api.uktjwg.cn"), DomainPoolPolicy.seeds)

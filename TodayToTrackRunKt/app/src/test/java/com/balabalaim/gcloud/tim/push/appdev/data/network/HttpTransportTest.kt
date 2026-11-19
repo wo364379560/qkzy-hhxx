@@ -22,6 +22,37 @@ class HttpTransportTest {
     private fun write(server: MockWebServer, method: String) = Request.Builder().url(server.url("/write"))
         .method(method, if (method == "DELETE") null else "{\"request_id\":\"stable-test-id\"}".toRequestBody("application/json".toMediaType())).build()
 
+    @Test fun unreachableIPv6FallsBackBeforeSendingOneWrite() {
+        MockWebServer().use { server ->
+            server.start(InetAddress.getByName("127.0.0.1"), 0)
+            server.enqueue(MockResponse().setBody("ok"))
+            val dns = object : Dns { override fun lookup(hostname: String) = listOf(InetAddress.getByName("::1"), InetAddress.getByName("127.0.0.1")) }
+            var ipv6Attempts = 0
+            // Force a pre-send IPv6 connection refusal; local VPNs may accept ::1 sockets.
+            val sockets = object : javax.net.SocketFactory() {
+                override fun createSocket(): java.net.Socket = object : java.net.Socket() {
+                    override fun connect(endpoint: java.net.SocketAddress, timeout: Int) {
+                        if ((endpoint as java.net.InetSocketAddress).address.address.size == 16) {
+                            ipv6Attempts++; throw java.net.ConnectException("simulated IPv6 refusal")
+                        }
+                        super.connect(endpoint, timeout)
+                    }
+                }
+                override fun createSocket(host: String, port: Int) = throw UnsupportedOperationException()
+                override fun createSocket(host: String, port: Int, local: InetAddress, localPort: Int) = throw UnsupportedOperationException()
+                override fun createSocket(host: InetAddress, port: Int) = throw UnsupportedOperationException()
+                override fun createSocket(host: InetAddress, port: Int, local: InetAddress, localPort: Int) = throw UnsupportedOperationException()
+            }
+            val transport = LinLanHttpTransport.configure(OkHttpClient.Builder().proxy(java.net.Proxy.NO_PROXY).dns(dns).socketFactory(sockets))
+                .callTimeout(3, TimeUnit.SECONDS).connectTimeout(1, TimeUnit.SECONDS).build()
+            val request = write(server, "POST").newBuilder().url(server.url("/write").newBuilder().host("isolated.test").build()).build()
+            transport.newCall(request).execute().use { assertEquals(200, it.code) }
+            assertEquals(1, server.requestCount)
+            assertEquals(1, ipv6Attempts)
+            assertEquals("isolated.test:${server.port}", server.takeRequest().getHeader("Host"))
+        }
+    }
+
     @Test fun disablingConnectionRetryAloneStillReplays503WithRetryAfterZero() {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setResponseCode(503).setHeader("Retry-After", "0").setBody("unavailable"))

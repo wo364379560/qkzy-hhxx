@@ -327,6 +327,7 @@ object LinLanImManager {
         }
     }
 
+    private val renewingUserSig = java.util.concurrent.atomic.AtomicBoolean(false)
     private val sdkListener = object : V2TIMSDKListener() {
         override fun onConnecting() {
             _connectionState.value = ConnectionState.Connecting
@@ -345,16 +346,19 @@ object LinLanImManager {
         }
 
         override fun onUserSigExpired() {
+            if (!renewingUserSig.compareAndSet(false, true)) return
             _connectionState.value = ConnectionState.Connecting
+            val observedGeneration = recallSession.get()
             scope.launch {
-                runCatching {
-                    val refreshed = LinLanAppContainer.apiClient().refreshSession()
-                    LinLanRuntimeConfig.applySdkAppId(refreshed.sdkAppId)
-                    login(refreshed.userId, refreshed.userSig)
-                    LinLanRtcCallManager.refreshLoginState(refreshed.userId, refreshed.userSig)
+                try { runCatching {
+                    // The auth repository serializes IM login/logout and validates the
+                    // current refresh token before and after reconnecting.
+                    if (LinLanAppContainer.authRepository().restoreSession() == null && recallSession.get() == observedGeneration) {
+                        _connectionState.value = ConnectionState.Disconnected
+                    }
                 }.onFailure {
-                    _connectionState.value = ConnectionState.Disconnected
-                }
+                    if (recallSession.get() == observedGeneration) _connectionState.value = ConnectionState.Disconnected
+                } } finally { renewingUserSig.set(false) }
             }
         }
     }

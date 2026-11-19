@@ -46,7 +46,12 @@ internal class SessionRefreshCoordinator(
                         if (changed.isLoggedIn && changed.userId == current.userId) changed else throw ApiException("登录已失效，请重新登录", unauthorized = true)
                     }
                 } catch (error: ApiException) {
-                    if (error.unauthorized && read() == current) clear(current)
+                    val latest = read()
+                    if (latest != current) {
+                        if (latest.isLoggedIn && latest.userId == current.userId) return@withLock latest
+                        throw kotlinx.coroutines.CancellationException("登录状态已变化")
+                    }
+                    if (error.unauthorized) clear(current)
                     throw error
                 }
             }

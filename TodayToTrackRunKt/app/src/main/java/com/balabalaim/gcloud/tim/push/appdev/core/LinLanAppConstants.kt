@@ -4,7 +4,7 @@ object LinLanAppConstants {
     const val SDK_APP_ID = 1600163137
     const val APP_NAME = "睿之禾"
     const val API_PREFIX = "/api/v1/chat"
-    const val PROBE_PATH = "/ping"
+    const val PROBE_PATH = "$API_PREFIX/ping"
     const val BOOTSTRAP_PATH = "/api/v1/public/bootstrap/domain-pool"
     const val FALLBACK_ORIGIN = "https://api.prfgsu.com"
 

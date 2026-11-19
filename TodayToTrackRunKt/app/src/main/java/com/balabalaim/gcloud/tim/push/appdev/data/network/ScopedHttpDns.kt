@@ -8,12 +8,22 @@ import java.net.UnknownHostException
 internal class ScopedHttpDns(
     private val signedLookup: (String) -> List<InetAddress>,
     private val system: Dns = Dns.SYSTEM,
+    private val diagnostic: (String, String, Long) -> Unit = { _, _, _ -> },
 ) : Dns {
     override fun lookup(hostname: String): List<InetAddress> {
         if (hostname.lowercase() !in DomainPoolPolicy.httpDnsHosts) return system.lookup(hostname)
-        val signed = runCatching { signedLookup(hostname) }.getOrDefault(emptyList()).filter(::isPublicAddress).distinct()
+        val started = System.nanoTime()
+        val result = runCatching { signedLookup(hostname) }
+        val signed = result.getOrDefault(emptyList()).filter(::isPublicAddress).distinct()
+        diagnostic(hostname, if (result.isFailure) "httpdns_failed" else if (signed.isEmpty()) "httpdns_empty" else "httpdns_success", (System.nanoTime() - started) / 1_000_000)
         if (signed.isNotEmpty()) return interleave(signed)
-        val fallback = system.lookup(hostname).filter(::isPublicAddress).distinct()
+        val systemAt = System.nanoTime()
+        val fallback = try { system.lookup(hostname).filter(::isPublicAddress).distinct() }
+        catch (error: UnknownHostException) {
+            diagnostic(hostname, "system_dns_failed", (System.nanoTime() - systemAt) / 1_000_000)
+            throw error
+        }
+        diagnostic(hostname, "system_dns_fallback", (System.nanoTime() - systemAt) / 1_000_000)
         if (fallback.isEmpty()) throw UnknownHostException("No public edge address for $hostname")
         return interleave(fallback)
     }

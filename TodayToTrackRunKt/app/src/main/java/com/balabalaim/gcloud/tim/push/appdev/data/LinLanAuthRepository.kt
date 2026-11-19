@@ -168,6 +168,7 @@ class LinLanAuthRepository(
     }
 
     private suspend fun completeImLogin(session: AuthSession) = imLifecycle.withLock {
+        val imStarted = System.nanoTime()
         fun requireCurrent(current: AuthSession) {
             if (current.userId != session.userId || current.refreshToken != session.refreshToken) throw CancellationException("登录状态已变化")
         }
@@ -179,6 +180,10 @@ class LinLanAuthRepository(
             LinLanImManager.login(session.userId, session.userSig)
         } ?: throw Exception("IM 登录超时")
         requireCurrent(sessionStore.currentSession())
+        com.balabalaim.gcloud.tim.push.appdev.data.network.NetworkDiagnostics.record(
+            "im_ready", java.net.URI(com.balabalaim.gcloud.tim.push.appdev.data.network.LinLanDomainPoolManager.currentBaseUrl()).host,
+            (System.nanoTime() - imStarted) / 1_000_000,
+        )
         LinLanRtcCallManager.setup(context)
         LinLanRtcCallManager.refreshLoginState(session.userId, session.userSig)
         LinLanPushManager.registerIfAvailable(context, session.userId)

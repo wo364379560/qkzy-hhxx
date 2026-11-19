@@ -16,23 +16,30 @@ internal object DomainPoolPolicy {
         "https://api.ruizhihe.com", "https://api.prfgsu.com", "https://api.uktjwg.cn",
         "https://api1.prfgsu.com", "https://api1.uktjwg.cn",
     )
+    // Approved business hosts are independent of the bundled bootstrap and HTTPDNS scopes.
+    val trustedBusinessOrigins = bootstrapOrigins.toSet() + setOf(
+        "https://cdnapi1.sazuts.cn", "https://cdnapi2.sazuts.cn",
+    )
     val httpDnsHosts = setOf("api.prfgsu.com", "api1.prfgsu.com", "api.uktjwg.cn", "api1.uktjwg.cn")
 
-    private fun relay(origin: String): String = when (URI(origin).host) {
+    internal fun relay(origin: String): String = when (URI(origin).host) {
         "api.prfgsu.com", "api1.prfgsu.com" -> "001"
         "api.uktjwg.cn", "api1.uktjwg.cn" -> "002"
+        "cdnapi1.sazuts.cn", "cdnapi2.sazuts.cn" -> "sazuts"
         else -> origin
     }
 
-    /** At most two attempts per scan, preferring independent relay groups. */
-    fun boundedCandidates(origins: List<String>, preferred: String): List<String> {
+    /** Bounded by the exact approved pool; prefer independent relay groups. */
+    fun recoveryCandidates(origins: List<String>, preferred: String): List<String> {
         if (origins.isEmpty()) return emptyList()
         val start = origins.indexOf(preferred).coerceAtLeast(0)
         val rotated = origins.drop(start) + origins.take(start)
-        val first = rotated.first()
-        val second = rotated.drop(1).firstOrNull { relay(it) != relay(first) } ?: rotated.getOrNull(1)
-        return listOfNotNull(first, second)
+        val families = mutableSetOf<String>()
+        val independent = rotated.filter { families.add(relay(it)) }
+        return independent + rotated.filter { it !in independent }
     }
+
+    fun boundedCandidates(origins: List<String>, preferred: String): List<String> = recoveryCandidates(origins, preferred).take(2)
 
     // Leave time for recovery and one safe GET retry when the first route hangs.
     fun attemptBudgetMillis(method: String, attempt: Int, remaining: Long): Long =
@@ -60,7 +67,7 @@ internal object DomainPoolPolicy {
         val array = pool.optJSONArray("api_origins") ?: return null
         if (array.length() !in 1..16) return null
         val origins = (0 until array.length()).map { normalizeOrigin(array.get(it) as? String ?: return null) ?: return null }.distinct()
-        if (origins.any { it !in bootstrapOrigins }) return null
+        if (origins.any { it !in trustedBusinessOrigins }) return null
         DomainPoolDocument(version, ttl, origins)
     }.getOrNull()
 
@@ -69,6 +76,9 @@ internal object DomainPoolPolicy {
         if (root.opt("code") != 0) return null
         parseDocument(root.getJSONObject("data"))
     }.getOrNull()
+
+    // A stale document may bridge a temporary outage for at most one day.
+    fun usableCache(fetchedAt: Long, now: Long, ttlSeconds: Int = 0): Boolean = fetchedAt > 0 && now >= fetchedAt && now - fetchedAt <= ttlSeconds * 1000L + 86_400_000L
 
     fun accepts(current: DomainPoolDocument?, next: DomainPoolDocument): Boolean = current == null ||
         next.version > current.version || next == current
@@ -81,5 +91,28 @@ internal object DomainPoolPolicy {
     fun preferMember(origins: List<String>, cached: String?): List<String> {
         val normalized = cached?.let(::normalizeOrigin)
         return if (normalized != null && normalized in origins) listOf(normalized) + origins.filter { it != normalized } else origins
+    }
+}
+
+/** Version trust outlives the route cache. Reads re-evaluate expiry while the app stays running. */
+internal class ValidatedDomainPoolCache(
+    private val seeds: List<String>,
+    private val wallNow: () -> Long = System::currentTimeMillis,
+) {
+    private var document: DomainPoolDocument? = null
+    private var fetchedAt = 0L
+    @Synchronized fun restore(value: DomainPoolDocument, fetched: Long) { document = value; fetchedAt = fetched }
+    @Synchronized fun publish(value: DomainPoolDocument): Boolean {
+        if (!DomainPoolPolicy.accepts(document, value)) return false
+        document = value; fetchedAt = wallNow()
+        return true
+    }
+    @Synchronized fun origins(): List<String> {
+        val value = document ?: return seeds
+        return if (DomainPoolPolicy.usableCache(fetchedAt, wallNow(), value.ttlSeconds)) value.origins else seeds
+    }
+    @Synchronized fun refreshAfter(): Long {
+        val value = document ?: return 0L
+        return if (DomainPoolPolicy.usableCache(fetchedAt, wallNow(), value.ttlSeconds)) fetchedAt + value.ttlSeconds * 1000L else 0L
     }
 }

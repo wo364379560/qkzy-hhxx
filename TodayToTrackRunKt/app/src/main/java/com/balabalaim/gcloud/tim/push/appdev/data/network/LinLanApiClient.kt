@@ -47,6 +47,7 @@ class LinLanApiClient(
 ) {
     private val jsonMedia = "application/json; charset=utf-8".toMediaType()
     private val client = LinLanHttpTransport.configure(OkHttpClient.Builder())
+        .eventListenerFactory { NetworkDiagnostics.listener() }
         .dns(LinLanHTTPDNS.dns)
         .followRedirects(false)
         .followSslRedirects(false)
@@ -642,22 +643,28 @@ class LinLanApiClient(
     }
 
     private suspend fun postData(path: String, body: JSONObject, auth: Boolean): JSONObject {
+        val deadline = android.os.SystemClock.elapsedRealtime() + 30_000
+        val base = if (!auth && path in setOf("/login", "/register", "/sms/send", "/password/reset")) {
+            val started = android.os.SystemClock.elapsedRealtime()
+            try { LinLanDomainPoolManager.prepareLoginRoute(deadline) }
+            finally { NetworkDiagnostics.record("route_preflight", LinLanDomainPoolManager.currentBaseUrl().toHttpUrl().host, android.os.SystemClock.elapsedRealtime() - started) }
+        } else LinLanDomainPoolManager.currentBaseUrl()
         val builder = Request.Builder()
-            .url(LinLanDomainPoolManager.currentBaseUrl() + path)
+            .url(base + path)
             .post(body.toString().toRequestBody(jsonMedia))
         if (auth) {
             builder.header("Authorization", authorizationHeader())
         }
-        return executeForData(builder.build())
+        return executeForData(builder.build(), deadline = deadline)
     }
 
-    private suspend fun executeForData(request: Request, expectedOwner: String? = null, expectedGeneration: Long? = null): JSONObject = withContext(Dispatchers.IO) {
+    private suspend fun executeForData(request: Request, expectedOwner: String? = null, expectedGeneration: Long? = null, deadline: Long? = null): JSONObject = withContext(Dispatchers.IO) {
         LinLanDomainPoolManager.ensureReady()
         val requestGeneration = expectedGeneration ?: sessionStore.sessionGeneration()
         val requestOwner = expectedOwner ?: sessionStore.currentSession().userId
         if (sessionStore.sessionGeneration() != requestGeneration || sessionStore.currentSession().userId != requestOwner) throw CancellationException("账号已变化")
         var activeRequest = request
-        val networkDeadline = android.os.SystemClock.elapsedRealtime() + 30_000
+        val networkDeadline = deadline ?: (android.os.SystemClock.elapsedRealtime() + 30_000)
         var attempt = 0
         var authRetried = false
         while (true) {
@@ -673,14 +680,16 @@ class LinLanApiClient(
                 if (!response.isSuccessful) {
                     val msg = runCatching { JSONObject(text).optString("message") }.getOrNull()
                         ?.takeIf { it.isNotBlank() } ?: "请求失败(${response.code})"
-                    if (response.code == 401) throw ApiException(msg, unauthorized = true, status = 401)
-                    throw ApiException(msg, status = response.code)
+                    val details = runCatching { JSONObject(text).optJSONObject("data") }.getOrNull()
+                    val kind = details?.optString("error_code")?.takeIf { it.startsWith("SESSION_") }
+                    throw ApiException(msg, unauthorized = response.code == 401 && kind != "SESSION_TEMPORARY", status = response.code, providerCode = kind)
                 }
                 val root = JSONObject(text)
                 if (root.optInt("code", -1) != 0) {
                     val msg = root.optString("message").ifBlank { "请求失败" }
                     throw ApiException(msg, unauthorized = root.optInt("code") == 401)
                 }
+                LinLanDomainPoolManager.recordSuccess(ApiRouteRecovery.origin(activeRequest.url))
                 root.optJSONObject("data") ?: JSONObject()
                 }
             } catch (error: Throwable) {
@@ -697,6 +706,7 @@ class LinLanApiClient(
                     // This endpoint rejected a newly issued access token. The refresh session is still valid.
                     throw error
                 }
+                if (ApiRouteRecovery.isRouteFailure(error)) LinLanDomainPoolManager.recordFailure(ApiRouteRecovery.origin(activeRequest.url))
                 val next = routeRecovery.nextReadRequest(activeRequest, attempt, error, networkDeadline) {
                     sessionStore.sessionGeneration() == requestGeneration && sessionStore.currentSession().userId == requestOwner
                 }
