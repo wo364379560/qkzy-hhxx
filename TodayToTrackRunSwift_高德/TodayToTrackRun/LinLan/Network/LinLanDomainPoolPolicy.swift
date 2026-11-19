@@ -17,22 +17,33 @@ nonisolated enum LinLanDomainPoolPolicy {
     static let seeds = ["https://api.ruizhihe.com", "https://api.prfgsu.com", "https://api.uktjwg.cn"]
     static let bootstrapOrigins = seeds + ["https://api1.prfgsu.com", "https://api1.uktjwg.cn"]
 
+    static let businessOrigins = bootstrapOrigins + ["https://cdnapi1.sazuts.cn", "https://cdnapi2.sazuts.cn"]
+    static let maximumStaleSeconds: TimeInterval = 24 * 60 * 60
+
     private static func relay(_ origin: String) -> String {
         switch URL(string: origin)?.host {
         case "api.prfgsu.com", "api1.prfgsu.com": "001"
         case "api.uktjwg.cn", "api1.uktjwg.cn": "002"
+        case "cdnapi1.sazuts.cn", "cdnapi2.sazuts.cn": "sazuts" // actual 001/002 mapping awaits operations confirmation
         default: origin
         }
     }
 
-    static func boundedCandidates(_ origins: [String], preferred: String) -> [String] {
+    static func recoveryCandidates(_ origins: [String], preferred: String) -> [String] {
         guard !origins.isEmpty else { return [] }
         let start = origins.firstIndex(of: preferred) ?? 0
         let rotated = Array(origins[start...]) + Array(origins[..<start])
-        let first = rotated[0]
-        let rest = Array(rotated.dropFirst())
-        guard let second = rest.first(where: { relay($0) != relay(first) }) ?? rest.first else { return [first] }
-        return [first, second]
+        var families = Set<String>()
+        let independent = rotated.filter { families.insert(relay($0)).inserted }
+        return independent + rotated.filter { !independent.contains($0) }
+    }
+
+    static func boundedCandidates(_ origins: [String], preferred: String) -> [String] {
+        Array(recoveryCandidates(origins, preferred: preferred).prefix(2))
+    }
+
+    static func cacheUsable(fetchedAt: TimeInterval, now: TimeInterval, ttl: Int) -> Bool {
+        fetchedAt > 0 && fetchedAt <= now && now - fetchedAt <= Double(ttl) + maximumStaleSeconds
     }
 
     static func attemptTimeout(method: String, mayRetry: Bool, remaining: TimeInterval, requested: TimeInterval) -> TimeInterval {
@@ -60,7 +71,7 @@ nonisolated enum LinLanDomainPoolPolicy {
             document.version >= 0, (60...86400).contains(document.ttlSeconds),
             (1...16).contains(document.origins.count) else { return nil }
         let normalized = document.origins.compactMap(normalizeOrigin)
-        guard normalized.count == document.origins.count, normalized.allSatisfy({ bootstrapOrigins.contains($0) }) else { return nil }
+        guard normalized.count == document.origins.count, normalized.allSatisfy({ businessOrigins.contains($0) }) else { return nil }
         var seen = Set<String>()
         return LinLanDomainPoolDocument(version: document.version, ttlSeconds: document.ttlSeconds,
             origins: normalized.filter { seen.insert($0).inserted })

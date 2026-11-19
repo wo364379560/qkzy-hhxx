@@ -44,6 +44,25 @@ import Foundation
             }
             preconditionFailure("late renewal should not undo logout")
         } catch { precondition(!store.currentSession().canResume) }
+        // An old refresh failure/success must neither clear nor reject a newer same-user login.
+        for rejected in [true, false] {
+            store.saveSession(partial)
+            let manager = LinLanRefreshCoordinator()
+            let result = try await manager.refresh(store: store) { _ in
+                store.saveSession(fresh)
+                if rejected { throw LinLanAPIError.http("revoked", status: 401, retryAfter: nil) }
+                return LinLanAuthSession(userId: "u", userSig: "old-sig", token: "late-access", refreshToken: "late-refresh")
+            }
+            precondition(result == fresh && store.currentSession() == fresh)
+        }
+        store.saveSession(partial)
+        do {
+            _ = try await LinLanRefreshCoordinator().refresh(store: store) { _ in
+                store.saveSession(LinLanAuthSession(userId: "other", userSig: "other-sig", token: "other-token", refreshToken: "other-refresh"))
+                throw LinLanAPIError.http("revoked", status: 401, retryAfter: nil)
+            }
+            preconditionFailure("old account should cancel")
+        } catch { precondition(error is CancellationError && store.currentSession().userId == "other") }
         print("Passed: empty, fresh, partial, expiring access/signature, rotation, 503, 401 and late refresh")
     }
 }

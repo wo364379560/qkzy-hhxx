@@ -234,6 +234,8 @@ final class LinLanLoginViewController: UIViewController {
         })
         alert.addAction(UIAlertAction(title: "同意", style: .default) { [weak self] _ in
             self?.privacyDialogAccepted = true
+            // Network preflight/HTTPDNS require consent before authentication can succeed.
+            self?.prefs.privacyAccepted = true
         })
         present(alert, animated: true)
     }

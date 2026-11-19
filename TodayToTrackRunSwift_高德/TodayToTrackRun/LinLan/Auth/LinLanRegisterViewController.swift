@@ -22,6 +22,7 @@ final class LinLanRegisterViewController: UIViewController, UITextFieldDelegate 
     private let submitButton = LinLanAuthForm.primaryButton(title: "创建账号")
 
     private var privacyDialogAccepted = false
+    private var privacyAcceptedAtEntry = false
     private var loading = false
 
     override func viewDidLoad() {
@@ -38,7 +39,8 @@ final class LinLanRegisterViewController: UIViewController, UITextFieldDelegate 
         )
         navigationController?.navigationBar.tintColor = AppTheme.accent
 
-        privacyDialogAccepted = prefs.privacyAccepted
+        privacyAcceptedAtEntry = prefs.privacyAccepted
+        privacyDialogAccepted = privacyAcceptedAtEntry
         phoneField.keyboardType = .phonePad
         [phoneField, nicknameField, passwordField, inviteField, codeRow.codeField].forEach {
             $0.delegate = self
@@ -124,7 +126,7 @@ final class LinLanRegisterViewController: UIViewController, UITextFieldDelegate 
     }
 
     private func canSubmit() -> Bool {
-        if prefs.privacyAccepted { return true }
+        if privacyAcceptedAtEntry { return true }
         return privacyDialogAccepted && legalRow.isChecked
     }
 
@@ -189,6 +191,8 @@ final class LinLanRegisterViewController: UIViewController, UITextFieldDelegate 
         )
         alert.addAction(UIAlertAction(title: "同意", style: .default) { [weak self] _ in
             self?.privacyDialogAccepted = true
+            // Persist the explicit consent before SMS/login preflight, not after login.
+            self?.prefs.privacyAccepted = true
         })
         alert.addAction(UIAlertAction(title: "暂不使用", style: .destructive) { _ in
             exit(0)

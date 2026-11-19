@@ -1,0 +1,82 @@
+PODS:
+  - Alamofire (5.12.2)
+  - AlicloudHTTPDNS (3.4.2)
+  - AMap3DMap (11.2.100):
+    - AMapFoundation (>= 1.9.0)
+  - AMapFoundation (1.9.1)
+  - AMapLocation (2.12.2):
+    - AMapFoundation (>= 1.9.0)
+  - AMapSearch (9.8.1):
+    - AMapFoundation (>= 1.9.0)
+  - EMASCurl (1.5.7):
+    - EMASCurl/HTTP2 (= 1.5.7)
+  - EMASCurl/HTTP2 (1.5.7)
+  - GRDB.swift (6.24.1):
+    - GRDB.swift/standard (= 6.24.1)
+  - GRDB.swift/standard (6.24.1)
+  - Moya (15.0.0):
+    - Moya/Core (= 15.0.0)
+  - Moya/Core (15.0.0):
+    - Alamofire (~> 5.0)
+  - SnapKit (5.6.0)
+  - TXIMSDK_Plus_Swift_iOS_XCFramework (9.0.7654)
+  - TXLiteAVSDK_TRTC (13.6.21648):
+    - TXLiteAVSDK_TRTC/TRTC (= 13.6.21648)
+  - TXLiteAVSDK_TRTC/TRTC (13.6.21648)
+  - XHToast (1.4.0)
+  - ZLPhotoBrowser (4.7.4):
+    - ZLPhotoBrowser/Core (= 4.7.4)
+  - ZLPhotoBrowser/Core (4.7.4)
+
+DEPENDENCIES:
+  - Alamofire (~> 5.8)
+  - AlicloudHTTPDNS (= 3.4.2)
+  - AMap3DMap
+  - AMapLocation
+  - AMapSearch
+  - EMASCurl (= 1.5.7)
+  - GRDB.swift
+  - Moya (~> 15.0)
+  - SnapKit (~> 5.6.0)
+  - TXIMSDK_Plus_Swift_iOS_XCFramework (= 9.0.7654)
+  - TXLiteAVSDK_TRTC
+  - XHToast (~> 1.1)
+  - ZLPhotoBrowser (~> 4.5)
+
+SPEC REPOS:
+  https://github.com/aliyun/aliyun-specs.git:
+    - AlicloudHTTPDNS
+    - EMASCurl
+  trunk:
+    - Alamofire
+    - AMap3DMap
+    - AMapFoundation
+    - AMapLocation
+    - AMapSearch
+    - GRDB.swift
+    - Moya
+    - SnapKit
+    - TXIMSDK_Plus_Swift_iOS_XCFramework
+    - TXLiteAVSDK_TRTC
+    - XHToast
+    - ZLPhotoBrowser
+
+SPEC CHECKSUMS:
+  Alamofire: c5f37d8f438dc1d7fd3ff767f2f80fd01ca381d7
+  AlicloudHTTPDNS: 7a3e5144c7d02f352d628e9afdfda482140e363d
+  AMap3DMap: 4718171fccb20e827d48ce9cefb20d67f35441f1
+  AMapFoundation: 8c511ce0584873bc6febb071365b2bfd62ce4a11
+  AMapLocation: 0a44d96a4d9698ecb70560d2cc47d6f49c191ad8
+  AMapSearch: bbbaa101ed94f3b51ab3a867d030a5336555138e
+  EMASCurl: 5980d87d78ded72a52df24b5e3175bdc12a23c9b
+  GRDB.swift: 136dcb5d8dddca50aae3ba7d77475f79e7232cd8
+  Moya: 138f0573e53411fb3dc17016add0b748dfbd78ee
+  SnapKit: e01d52ebb8ddbc333eefe2132acf85c8227d9c25
+  TXIMSDK_Plus_Swift_iOS_XCFramework: 09dfd07f49267bd73899b929b2fcfd4806d1e3f4
+  TXLiteAVSDK_TRTC: 2c9b12952f959b2304ef86bce9665013fc62633f
+  XHToast: 3b354766d56d9df8fef8e64387bbd25c90d71a86
+  ZLPhotoBrowser: 165f9afee5d238a2c39b52128a94a4445aae2fdf
+
+PODFILE CHECKSUM: 3a2099ce689110186fd827a87e2cb58531811685
+
+COCOAPODS: 1.16.2

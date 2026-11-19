@@ -471,7 +471,18 @@ final class LinLanApiClient {
     }
 
     private func postData(_ path: String, body: [String: Any], auth: Bool) async throws -> [String: Any] {
-        let base = await LinLanDomainPool.shared.currentBaseURL()
+        let deadline = ProcessInfo.processInfo.systemUptime + 30
+        let base: String
+        if !auth && ["/login", "/register", "/sms/send", "/password/reset"].contains(path) {
+            let began = ProcessInfo.processInfo.systemUptime
+            guard let verifiedBase = await LinLanDomainPool.shared.prepareForLogin(deadline: deadline) else {
+                throw LinLanAPIError.network("暂时没有可用线路，请稍后重试")
+            }
+            base = verifiedBase
+            #if DEBUG
+            print("[route] phase=preflight elapsed_ms=\(Int((ProcessInfo.processInfo.systemUptime-began)*1000))")
+            #endif
+        } else { base = await LinLanDomainPool.shared.currentBaseURL() }
         guard let url = URL(string: base + path) else {
             throw LinLanAPIError.network("无效地址")
         }
@@ -485,7 +496,7 @@ final class LinLanApiClient {
             )
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        return try await executeForData(request)
+        return try await executeForData(request, networkDeadline: deadline)
     }
 
     private func putData(_ path: String, body: [String: Any], auth: Bool) async throws -> [String: Any] {
@@ -574,6 +585,9 @@ final class LinLanApiClient {
             if biz != 0 {
                 let msg = string(root, "message").isEmpty ? "请求失败" : string(root, "message")
                 throw LinLanAPIError.message(msg)
+            }
+            if let host = request.url?.host {
+                await LinLanDomainPool.shared.markAvailable(origin: "https://" + host)
             }
             return (root["data"] as? [String: Any]) ?? [:]
         } catch let error as LinLanAPIError {

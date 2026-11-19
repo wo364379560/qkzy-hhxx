@@ -10,11 +10,26 @@ actor LinLanRefreshCoordinator {
         let expected = store.currentSession()
         guard !expected.refreshToken.isEmpty else { throw LinLanAPIError.message("登录已过期", unauthorized: true) }
         let operation = Task {
-            let refreshed = try await remote(expected)
-            guard refreshed.isLoggedIn, !refreshed.refreshToken.isEmpty, refreshed.userId == expected.userId, store.replaceSession(expected, with: refreshed) else {
-                throw LinLanAPIError.message("登录状态已变化，请重新操作")
+            do {
+                let refreshed = try await remote(expected)
+                guard refreshed.isLoggedIn, !refreshed.refreshToken.isEmpty, refreshed.userId == expected.userId else {
+                    throw LinLanAPIError.message("续签响应不完整，请稍后重试")
+                }
+                if store.replaceSession(expected, with: refreshed) { return refreshed }
+                let latest = store.currentSession()
+                if latest.isLoggedIn && latest.userId == expected.userId { return latest }
+                throw CancellationError()
+            } catch {
+                let latest = store.currentSession()
+                if latest != expected {
+                    if latest.isLoggedIn && latest.userId == expected.userId { return latest }
+                    throw CancellationError()
+                }
+                if (error as? LinLanAPIError)?.isUnauthorized == true {
+                    _ = store.replaceSession(expected, with: LinLanAuthSession())
+                }
+                throw error
             }
-            return refreshed
         }
         task = operation
         defer { task = nil }
@@ -24,9 +39,10 @@ actor LinLanRefreshCoordinator {
             nextAttempt = .distantPast
             return result
         } catch {
-            if (error as? LinLanAPIError)?.isUnauthorized == true {
-                _ = store.replaceSession(expected, with: LinLanAuthSession())
-            } else {
+            if store.currentSession() != expected || error is CancellationError {
+                failures = 0
+                nextAttempt = .distantPast
+            } else if (error as? LinLanAPIError)?.isUnauthorized != true {
                 failures += 1
                 let serverDelay = (error as? LinLanAPIError)?.retryAfter ?? 0
                 nextAttempt = Date().addingTimeInterval(max(serverDelay, min(30, pow(2, Double(min(failures, 5))))) + Double.random(in: 0...0.5))
