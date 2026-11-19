@@ -5,6 +5,11 @@ export const DEFAULT_API_ORIGINS = [
 export const BOOTSTRAP_ORIGINS = [
   ...DEFAULT_API_ORIGINS, 'https://api1.prfgsu.com', 'https://api1.uktjwg.cn',
 ] as const;
+// Approved business candidates are independent of built-in discovery entries.
+export const TRUSTED_API_ORIGINS = [...BOOTSTRAP_ORIGINS,
+  'https://cdnapi1.sazuts.cn', 'https://cdnapi2.sazuts.cn',
+] as const;
+const MAX_STALE_MS = 24 * 60 * 60 * 1000;
 export const BOOTSTRAP_PATH = '/api/v1/public/bootstrap/domain-pool';
 export type DomainPoolDocument = { version: number; ttl_seconds: number; api_origins: string[] };
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
@@ -15,7 +20,7 @@ export function normalizeOrigin(value: unknown): string | null {
   try {
     const u = new URL(value.trim());
     if (u.protocol !== 'https:' || u.username || u.password || u.search || u.hash ||
-        u.pathname !== '/' || u.port || !BOOTSTRAP_ORIGINS.some(o => o === u.origin)) return null;
+        u.pathname !== '/' || u.port || !TRUSTED_API_ORIGINS.some(o => o === u.origin)) return null;
     return u.origin;
   } catch { return null; }
 }
@@ -39,6 +44,9 @@ export function parseBootstrap(value: unknown): DomainPoolDocument | null {
 export function relayGroup(origin: string): string {
   if (origin === 'https://api.prfgsu.com' || origin === 'https://api1.prfgsu.com') return '001';
   if (origin === 'https://api.uktjwg.cn' || origin === 'https://api1.uktjwg.cn') return '002';
+  // Both names currently resolve to the same CDN distribution. Do not invent
+  // a 001/002 upstream mapping; keep them together until operations confirms it.
+  if (/^https:\/\/cdnapi[12]\.sazuts\.cn$/.test(origin)) return 'sazuts';
   return origin;
 }
 
@@ -102,6 +110,8 @@ export function createDomainPool(options: {
   let bootstrapCursor = 0;
   let inflight: Promise<void> | null = null;
   let recovering: Promise<void> | null = null;
+  let recoveryCursor = 0;
+  const cooldowns = new Map<string, number>();
   try {
     const cached = JSON.parse(storage?.getItem(CACHE_KEY) || 'null');
     const valid = parseDocument(cached?.document);
@@ -165,7 +175,11 @@ export function createDomainPool(options: {
     if (recovering) return recovering;
     if (active !== failed) return Promise.resolve();
     const expectedRevision = revision;
-    const alternatives = origins.filter(o => o !== failed);
+    cooldowns.set(failed, now() + 30000);
+    const available = origins.filter(o => o !== failed && (cooldowns.get(o) || 0) <= now());
+    const start = available.length ? recoveryCursor % available.length : 0;
+    const alternatives = [...available.slice(start), ...available.slice(0, start)];
+    recoveryCursor++;
     const preferred = alternatives.find(o => relayGroup(o) !== relayGroup(failed)) ?? alternatives[0];
     recovering = (async () => {
       for (const origin of boundedCandidates(alternatives, preferred)) {
@@ -175,14 +189,14 @@ export function createDomainPool(options: {
           const response = await request(origin + '/api/v1/chat/ping', {
             signal: controller.signal, credentials: 'omit', redirect: 'error', cache: 'no-store',
           });
-          if (response.status !== 200) continue;
+          if (response.status !== 200) { cooldowns.set(origin, now() + 30000); continue; }
           const value = await readBootstrap(response) as { code?: unknown; data?: { status?: unknown } };
-          if (value?.code !== 0 || value.data?.status !== 'ok') continue;
+          if (value?.code !== 0 || value.data?.status !== 'ok') { cooldowns.set(origin, now() + 30000); continue; }
           if (revision === expectedRevision && active === failed && origins.includes(origin)) {
             active = origin; persist();
           }
           return;
-        } catch { /* A failed write is never replayed; only verify a future route. */ }
+        } catch { cooldowns.set(origin, now() + 30000); /* Never replay a write. */ }
         finally { clearTimeout(timer); }
       }
     })().finally(() => { recovering = null; });
@@ -192,7 +206,14 @@ export function createDomainPool(options: {
     refresh,
     recover,
     waitForRecovery: () => recovering ?? Promise.resolve(),
-    currentOrigin: () => active,
+    currentOrigin: () => {
+      // Keep the last version as an anti-rollback watermark, but do not route
+      // business traffic through a cache indefinitely during discovery outages.
+      if (document && now() > fetchedAt + document.ttl_seconds * 1000 + MAX_STALE_MS) {
+        throw new Error('线路信息已过期，请连接网络后重试');
+      }
+      return active;
+    },
     snapshot: () => ({ origins: [...origins], revision, document }),
     alternative(failed: string): string | undefined {
       const start = origins.indexOf(failed);

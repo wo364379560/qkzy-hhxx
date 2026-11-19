@@ -20,6 +20,7 @@
         :key="props.groupID"
         :groupID="props.groupID"
       />
+      <p v-if="adminLoadError" role="status">{{ adminLoadError }}</p>
       <!-- Message List -->
       <ul
         id="messageScrollList"
@@ -707,6 +708,7 @@ const largeAttachmentUploadTasks = computed(() =>
   getLargeAttachmentUploadTasks(currentConversationID.value)
 );
 
+const adminLoadError = ref('');
 const currentUserID = computed<string>(() => {
   return TUIStore.getData(StoreName.USER, "userProfile")?.userID || "";
 });
@@ -736,6 +738,7 @@ const canModerateIncomingMessage = computed<boolean>(() => {
 watch(
   () => props.groupID,
   async (groupID) => {
+    adminLoadError.value = "";
     if (!props.isGroup || !groupID) {
       currentGroupProfile.value = undefined;
       groupMemberRoleMap.value = {};
@@ -1532,8 +1535,7 @@ async function syncCurrentGroupContext(groupID: string) {
         role: TUIChatEngine.TYPES.GRP_MBR_ROLE_OWNER,
       },
     ]);
-    try {
-      const adminResult = await getGroupAdmins(groupID);
+    void getGroupAdmins(groupID).then((adminResult) => {
       if (componentDisposed || revision !== conversationRevision || groupID !== props.groupID) {
         return;
       }
@@ -1552,11 +1554,13 @@ async function syncCurrentGroupContext(groupID: string) {
       }));
       updateGroupMemberRoleMap(adminMemberList);
       updateGroupMemberInfoMap(adminMemberList as IGroupMember[]);
-    } catch (error) {
+      adminLoadError.value = "";
+      rebuildVisibleMessageList();
+    }).catch(() => {
       if (componentDisposed || revision !== conversationRevision) return;
       mergedAdminUserIDSet.value = new Set();
-      console.warn("sync group business admins failed:", error);
-    }
+      adminLoadError.value = "管理员资料暂时加载失败，普通聊天仍可使用";
+    });
   } catch (error) {
     console.warn("syncCurrentGroupContext failed:", error);
   }

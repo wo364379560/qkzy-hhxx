@@ -10,6 +10,7 @@
       </div>
       <div />
     </header>
+    <p v-if="adminLoadError" role="status">{{ adminLoadError }}</p>
     <main
       v-if="!currentTab || (isUniFrameWork && currentTab != 'admin')"
       class="main"
@@ -590,6 +591,11 @@ const member = ref({
   muteMember: [] as IGroupMember[],
 });
 const mergedAdminUserIDSet = ref<Set<string>>(new Set());
+const adminLoadError = ref('');
+let groupContextRevision = 0;
+let groupDisposed = false;
+onUnmounted(() => { groupDisposed = true; groupContextRevision++; });
+watch(currentGroupID, () => { groupContextRevision++; mergedAdminUserIDSet.value = new Set(); adminLoadError.value = ''; mask.value = false; transferOpening.value = false; isTransferLoading.value = false; }, { flush: 'sync' });
 const friendList = ref<IFriendProfile[]>([]);
 const transferList = ref<IGroupMember[]>([]);
 const displayOnlineStatus = ref(false);
@@ -893,11 +899,13 @@ const mergeBackendGroupAdmins = async (groupID: string) => {
     return;
   }
 
+  const revision = groupContextRevision;
   const adminResult = await getGroupAdmins(groupID);
-  if (groupID !== currentGroupID.value) {
+  if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
     return;
   }
 
+  adminLoadError.value = "";
   const nextAdminIDs = new Set<string>();
   const currentMemberMap = new Map<string, IGroupMember>();
   groupMemberList.value.forEach((item) => {
@@ -956,15 +964,12 @@ const applyCurrentGroupMemberList = async (memberList: IGroupMember[] = []) => {
   groupMemberList.value = nextGroupMemberList;
   rebuildMemberBuckets(nextGroupMemberList);
   if (currentGroupID.value) {
-    try {
-      await mergeBackendGroupAdmins(currentGroupID.value);
-    } catch (_) {
-      mergedAdminUserIDSet.value = new Set(
-        member.value.admin
-          .map((item) => item.userID || "")
-          .filter((userID) => Boolean(userID))
-      );
-    }
+    const revision = groupContextRevision;
+    // Member display and add-member controls do not wait for administrator IO.
+    void mergeBackendGroupAdmins(currentGroupID.value).catch(() => {
+      if (groupDisposed || revision !== groupContextRevision) return;
+      adminLoadError.value = '管理员资料暂时加载失败，可重新打开管理员列表重试';
+    });
   }
   void syncGroupMemberOnlineStatus(nextGroupMemberList);
   if (mask.value) {
@@ -1667,19 +1672,23 @@ const toggleMask = async (type?: string) => {
   isSearch.value = type ? searchEnabledTransferTypes.has(type) : false;
   selectedList.value = [];
   type && (transferType.value = type);
+  const revision = groupContextRevision;
   transferOpening.value = true;
   transferOpeningType.value = type;
   isTransferLoading.value = true;
   try {
     await updateTransferList(type);
+    if (groupDisposed || revision !== groupContextRevision) return;
     mask.value = true;
   } catch (error: any) {
+    if (groupDisposed || revision !== groupContextRevision) return;
     mask.value = false;
     Toast({
       message: error?.message || "成员列表加载失败，请稍后重试",
       type: TOAST_TYPE.ERROR,
     });
   } finally {
+    if (groupDisposed || revision !== groupContextRevision) return;
     isTransferLoading.value = false;
     transferOpening.value = false;
     transferOpeningType.value = "";
@@ -1723,6 +1732,7 @@ const resolveTransferSourceList = async (type?: string) => {
 };
 
 const updateTransferList = async (type?: string) => {
+  const revision = groupContextRevision;
   const shouldLoadAllMembers = ["remove", "changeOwner", "addMute", "addAdmin"].includes(
     type || ""
   );
@@ -1735,7 +1745,9 @@ const updateTransferList = async (type?: string) => {
     await ensureFriendListLoaded();
   }
 
+  if (groupDisposed || revision !== groupContextRevision) return;
   const sourceList = await resolveTransferSourceList(type);
+  if (groupDisposed || revision !== groupContextRevision) return;
   applyTransferSourceList(type, sourceList);
 };
 
@@ -1815,6 +1827,7 @@ const enrichGroupMembersWithFriendRemark = (memberList: IGroupMember[] = []) => 
 const getFriendsNotInGroup = async () => {
   await ensureFriendListLoaded();
   const groupID = currentGroupID.value;
+  const revision = groupContextRevision;
   const friendUserIDs = normalizeUserIDList(
     friendList.value.map((item: any) => item.userID)
   );
@@ -1822,7 +1835,7 @@ const getFriendsNotInGroup = async () => {
     return [];
   }
   const result = await filterGroupMembers(groupID, friendUserIDs);
-  if (groupID !== currentGroupID.value) {
+  if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
     return [];
   }
   const notInGroupSet = new Set(result.not_in_group || []);
@@ -2020,24 +2033,26 @@ const searchGroupMemberByKeyword = async (keyword: string) => {
 };
 
 async function loadConversationProfile(groupID: string) {
+  const revision = groupContextRevision;
   try {
     const res = await TUIConversationService.getConversationProfile(
       `${TUIChatEngine.TYPES.CONV_GROUP}${groupID}`
     );
-    if (groupID !== currentGroupID.value) return;
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) return;
     currentConversation.value = res?.data?.conversation;
     await syncCurrentConversationLocalPin();
   } catch (error) {
+    if (groupDisposed || revision !== groupContextRevision) return;
     currentConversation.value = undefined;
   }
 
   try {
     const notice = await getGroupNotice(groupID);
-    if (groupID !== currentGroupID.value) return;
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) return;
     groupNoticePinned.value = Boolean(notice?.pinned);
     groupNoticeContent.value = notice?.content || "";
   } catch (_) {
-    if (groupID !== currentGroupID.value) return;
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) return;
     groupNoticeContent.value = "";
     groupNoticePinned.value = false;
   }
@@ -2074,6 +2089,7 @@ async function refreshGroupMembersState(
   minMemberCount?: number,
   optimisticUserIDList: string[] = []
 ) {
+  const revision = groupContextRevision;
   if (!currentGroupID.value) {
     return;
   }
@@ -2085,7 +2101,7 @@ async function refreshGroupMembersState(
 
   const groupID = currentGroupID.value;
   const groupResponse = await TUIGroupService.getGroupProfile({ groupID });
-  if (groupID !== currentGroupID.value) {
+  if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
     return;
   }
   if (groupResponse?.data?.group) {
@@ -2097,12 +2113,12 @@ async function refreshGroupMembersState(
   }
   try {
     const notice = await getGroupNotice(groupID);
-    if (groupID !== currentGroupID.value) {
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
       return;
     }
     groupNoticeContent.value = notice?.content || "";
   } catch (_) {
-    if (groupID !== currentGroupID.value) {
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
       return;
     }
     groupNoticeContent.value = "";
@@ -2115,7 +2131,7 @@ async function refreshGroupMembersState(
       count: 100,
       offset: 0,
     });
-    if (groupID !== currentGroupID.value) {
+    if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
       return;
     }
     const excludedUserIDSet = new Set(normalizeUserIDList(excludedUserIDList));
@@ -2134,7 +2150,7 @@ async function refreshGroupMembersState(
         },
         forceAll
       );
-      if (groupID !== currentGroupID.value) {
+      if (groupDisposed || revision !== groupContextRevision || groupID !== currentGroupID.value) {
         return;
       }
       nextMemberList = [...nextMemberList, ...filterExcludedMembers(restMemberList)];
@@ -2146,7 +2162,7 @@ async function refreshGroupMembersState(
     isCompleted.value = loadAll ? true : !nextOffset;
   } finally {
     window.setTimeout(() => {
-      if (groupID === currentGroupID.value) {
+      if (!groupDisposed && revision === groupContextRevision && groupID === currentGroupID.value) {
         isLoadingCurrentGroupMembers.value = false;
       }
     }, 0);
@@ -2774,7 +2790,7 @@ const appendAddedGroupMembers = async (userIDs: string[], newlyAdded: string[]) 
     await applyCurrentGroupMemberList([...groupMemberList.value, ...newMembers]);
   }
   const addedSet = new Set(newlyAdded);
-  syncGroupMemberCount(newMembers.filter(member => addedSet.has(member.userID)).length);
+  syncGroupMemberCount(newMembers.filter(member => addedSet.has(member.userID || "")).length);
   const addedUserIDSet = new Set(addedUserIDs);
   transferList.value = transferList.value.filter(
     (item: IGroupMember) => !addedUserIDSet.has(item.userID || "")

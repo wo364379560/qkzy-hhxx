@@ -5,13 +5,12 @@ import TUIChatEngine, {
   type IMessageModel,
 } from "@tencentcloud/chat-uikit-engine-lite";
 import TUICore, { TUIConstants } from "@tencentcloud/tui-core-lite";
-import TRTCCloud, {
-  TRTCAppScene,
-  TRTCAudioQuality,
-  TRTCParams,
-  TRTCRoleType,
-  TRTCVideoStreamType,
-} from "trtc-cloud-js-sdk";
+import type TRTCCloud from "trtc-cloud-js-sdk";
+let rtcModule: Promise<typeof import("trtc-cloud-js-sdk")> | null = null;
+function loadRTC() {
+  if (!rtcModule) rtcModule = import("trtc-cloud-js-sdk").catch(error => { rtcModule = null; throw error; });
+  return rtcModule;
+}
 import { useAuthSession } from "@/features/auth/session";
 import { rememberCallFromMessage, rememberLocalCall } from "./localCallHistory";
 import {
@@ -123,8 +122,8 @@ function clearWaitingChat() {
 
 function currentIdentity() { const session = getCurrentSession(); return session?.userID ? `${session.sdkAppID}:${session.userID}` : ''; }
 
-export function ensureDoMattxCallBridge(): boolean {
-  const chat = getChat();
+export function ensureDoMattxCallBridge(earlyChat?: any): boolean {
+  const chat = earlyChat || getChat();
   const identity = currentIdentity();
   if (!chat || !identity) return false;
   if (boundChat && (boundChat !== chat || boundIdentity !== identity)) {
@@ -133,20 +132,14 @@ export function ensureDoMattxCallBridge(): boolean {
   }
   if (typeof chat.addSignalingListener !== 'function') return false;
   const session = getCurrentSession();
-  if ((typeof chat.isReady === 'function' && !chat.isReady()) ||
-      (typeof chat.getLoginUser === 'function' && chat.getLoginUser() !== session?.userID)) {
-    if (waitingChat !== chat) {
-      clearWaitingChat(); waitingChat = chat; waitingReady = () => { ensureDoMattxCallBridge(); };
-      chat.on?.((TUIChatEngine as any).EVENT?.SDK_READY || 'onSdkReady', waitingReady);
-    }
-    return false;
-  }
+  const ready = () => (typeof chat.isReady !== 'function' || chat.isReady()) &&
+    (typeof chat.getLoginUser !== 'function' || chat.getLoginUser() === session?.userID);
   clearWaitingChat();
-  if (boundChat === chat && boundIdentity === identity) return true;
+  if (boundChat === chat && boundIdentity === identity) return ready();
   detachBindings?.();
   if (boundIdentity && boundIdentity !== identity) void endLocalCall();
   const epoch = ++bindingEpoch;
-  const active = () => epoch === bindingEpoch && getChat() === chat && currentIdentity() === identity;
+  const active = () => epoch === bindingEpoch && boundChat === chat && currentIdentity() === identity;
   const events: Array<[string, (...args: any[]) => void]> = [
     [getSignalingEventName('NEW_INVITATION_RECEIVED'), onNewInvitationReceived],
     [getSignalingEventName('INVITEE_ACCEPTED'), onInviteeAccepted],
@@ -169,7 +162,7 @@ export function ensureDoMattxCallBridge(): boolean {
     TUIStore.unwatch(StoreName.CHAT, watched);
   };
   boundChat = chat; boundIdentity = identity;
-  return true;
+  return ready();
 }
 
 export async function disposeDoMattxCallBridge() {
@@ -339,6 +332,8 @@ export async function refreshDoMattxVideoViews() {
   }
   const epoch = callEpoch;
   const cloud = trtc;
+  if (!cloud) return;
+  const { TRTCVideoStreamType } = await loadRTC();
   await nextTick();
   if (epoch !== callEpoch || cloud !== trtc) return;
   try {
@@ -594,6 +589,8 @@ async function enterTRTCRoom() {
     await rtcCleanup;
     if (epoch !== callEpoch) return;
     await destroyTRTC();
+    if (epoch !== callEpoch) return;
+    const { default: TRTCCloud, TRTCParams, TRTCRoleType, TRTCAppScene, TRTCAudioQuality } = await loadRTC();
     if (epoch !== callEpoch) return;
     const cloud = TRTCCloud.getTRTCShareInstance();
     trtc = cloud;
@@ -935,7 +932,7 @@ function getSignalingEventName(key: keyof typeof SIGNALING_EVENT): string {
 }
 
 function getChat(): any {
-  return TUIChatEngine.chat as any;
+  return boundChat || TUIChatEngine.chat as any;
 }
 
 function getCurrentSession() {

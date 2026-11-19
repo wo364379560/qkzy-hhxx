@@ -1,3 +1,5 @@
-import { TUICallKit } from '@trtc/calls-uikit-vue';
+import { defineAsyncComponent } from 'vue';
+import { prepareCallIntegration } from '@/bootstrap/callRuntime';
 
-export default TUICallKit;
+// Every CallKit entry point uses the same guarded vendor import.
+export default defineAsyncComponent(async () => (await prepareCallIntegration()).TUICallKit);

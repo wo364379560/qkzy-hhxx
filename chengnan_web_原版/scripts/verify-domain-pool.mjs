@@ -184,3 +184,38 @@ test('metadata waiting shares the caller deadline without canceling shared work'
   assert.ok(Date.now()-started<300);
   finish('shared-work-completed');assert.equal(await operation,'shared-work-completed');
 });
+
+const v4Origins = ['https://api.prfgsu.com', 'https://api.uktjwg.cn', 'https://api1.prfgsu.com', 'https://api1.uktjwg.cn', 'https://cdnapi1.sazuts.cn', 'https://cdnapi2.sazuts.cn'];
+test('current v4 pool is accepted without inserting the retired CF origin', async () => {
+  const pool = createDomainPool({storage:null, fetch:async()=>response(doc(4,v4Origins,600))});
+  await pool.refresh();
+  assert.deepEqual(pool.snapshot().origins, v4Origins);
+  assert.equal(pool.currentOrigin(), v4Origins[0]);
+  assert.equal(pool.snapshot().origins.includes(DEFAULT_API_ORIGINS[0]), false);
+  assert.equal(policy.BOOTSTRAP_ORIGINS.includes(v4Origins[4]), false);
+});
+for (const healthy of v4Origins.slice(4)) test(`bounded recovery eventually reaches ${healthy}`, async () => {
+  let now=1000; const probes=[];
+  const pool = createDomainPool({storage:null,now:()=>now,fetch:async url=>{
+    if(url.endsWith(policy.BOOTSTRAP_PATH)) return response(doc(4,v4Origins,600));
+    const origin=new URL(url).origin; probes.push(origin);
+    return origin===healthy ? response({status:'ok'}) : new Response('unavailable',{status:502});
+  }});
+  await pool.refresh();
+  for(let attempt=0; attempt<4 && pool.currentOrigin()!==healthy; attempt++) {
+    const before=probes.length;
+    await pool.recover(pool.currentOrigin());
+    assert(probes.length-before<=2,'each recovery has at most two anonymous probes');
+  }
+  assert.equal(pool.currentOrigin(),healthy);
+  assert(probes.includes(healthy));
+});
+test('old v4 cache has bounded stale lifetime and still rejects rollback', async () => {
+  let now=1000; const storage=memory();
+  const seed=createDomainPool({storage,now:()=>now,fetch:async()=>response(doc(4,v4Origins,600))});
+  await seed.refresh(); now+=600000+24*60*60*1000+1;
+  const pool=createDomainPool({storage,now:()=>now,fetch:async()=>response(doc(3))});
+  assert.throws(()=>pool.currentOrigin(),/过期/);
+  await pool.refresh(); assert.equal(pool.snapshot().document.version,4);
+  assert.throws(()=>pool.currentOrigin(),/过期/);
+});

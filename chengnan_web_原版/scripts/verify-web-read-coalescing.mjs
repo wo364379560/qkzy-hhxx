@@ -54,3 +54,17 @@ for (const [read, write, url] of [
   assert.deepEqual(await accountB,{account:'b'}); await staleAccount;
 }
 console.log('PASS: concurrent profile/pins reads coalesce; no completed permission cache; writes and account switches invalidate; failures retry.');
+
+api.setChatAuthToken('fixture-c', 'account-c'); pending.length=0;
+const adminFirst=api.getGroupAdmins('group-a'), adminSecond=api.getGroupAdmins('group-a');
+await tick(); assert.equal(pending.length,1); pending[0].finish({admins:[]});
+assert.deepEqual(await adminFirst,await adminSecond);
+const filters=[api.filterGroupMembers('group-a',['a','b']), api.filterGroupMembers('group-a',['b','a','b'])];
+await tick(); assert.equal(pending.length,2); pending[1].finish({in_group:['a'],not_in_group:['b']});
+assert.deepEqual(await filters[0],await filters[1]);
+const changed=api.filterGroupMembers('group-a',['a']); await tick(); assert.equal(pending.length,3);
+pending[2].finish({in_group:['a'],not_in_group:[]}); await changed;
+const old=api.getGroupAdmins('group-b'); const rejected=assert.rejects(old,e=>e.code==='SESSION_CHANGED'); await tick();
+api.setChatAuthToken('fixture-d','account-d'); const fresh=api.getGroupAdmins('group-b'); await tick();
+assert.equal(pending.length,5); pending[4].finish({admins:[]}); await fresh; pending[3].finish({admins:[{user_id:'old'}]}); await rejected;
+console.log('PASS: admins and member filters coalesce by group/session/candidates; late old-account results rejected.');

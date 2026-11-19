@@ -34,11 +34,12 @@ function harness(persisted, sharedStorage) {
   '@/bootstrap/startupMetrics':{markStartup(){}},
   '@/features/user/online-status':{initOnlineStatusSync(){},resetOnlineStatusSubscriptions(){}},
   '@/features/presence/invisible':{getInvisiblePreference:()=>false,INVISIBLE_CUSTOM_STATUS:'offline'},
-  '@/bootstrap/callRuntime':{prepareCallIntegration:async()=>{h.registered=true;return{};},disposeCallIntegration:async()=>{}},
+  '@/bootstrap/callRuntime':{captureCallSignals:(_session,_chat,active,scope)=>{h.captured=true;h.callActive=active;h.callScope=scope;},startCallIntegration:()=>{h.registered=true;return h.callInit?.() || Promise.resolve();},resetCallIntegration(){},disposeCallIntegration:async()=>{}},
+  '@/utils/networkDiagnostics':{tracePhase(){},newTraceID:()=> 'fixture-trace'},
   '@/bootstrap/chatRuntime':{ensureChatRuntime(){h.initialized=true;},loginChatRuntime(){}},
-  '@/features/call/doMattxCallBridge':{ensureDoMattxCallBridge:()=>true,disposeDoMattxCallBridge:async()=>{}},
+  '@/features/call/doMattxCallBridge':{ensureDoMattxCallBridge:()=>{h.bridgeInstalled=true;return true;},disposeDoMattxCallBridge:async()=>{}},
   '@tencentcloud/chat-uikit-engine-lite':{TUIUserService:{switchUserStatus:()=>h.presence()}},
-  '@tencentcloud/tui-core-lite':{TUILogin:{login:async()=>{if(!vue3)assert(h.registered&&h.initialized);h.sdkLogins++;await h.sdk();},logout:async()=>{h.sdkLogouts++;}}},
+  '@tencentcloud/tui-core-lite':{TUILogin:{getContext:()=>({chat:{}}),login:async()=>{if(!vue3)assert(h.initialized);h.sdkLogins++;await h.sdk();},logout:async()=>{h.sdkLogouts++;}}},
   '@/api':{login:async()=>h.auth(),refreshSession:async payload=>{h.refreshes++;h.refreshPayload=payload;return h.refresh(payload);},setChatAuthToken:(...args)=>apiContext?.setChatAuthToken(...args),setChatCacheScope(){},logout:async()=>{},updateProfile:async()=>{},changePassword:async()=>h.auth()},
  };
  const loaded=new Map();
@@ -51,11 +52,11 @@ function harness(persisted, sharedStorage) {
  }
  h.helpers=load('src/features/auth/recovery.ts');h.session=load('src/features/auth/session.ts').useAuthSession();
  const noCache={clear(){}};
- const context={exports:{},...h.helpers,authSession:h.session,console:{warn(){}},Date:Clock,Promise,Error,Boolean,
+ const context={DYNAMIC_API_ROUTING:false,CHAT_API_TIMEOUT_MS:15000,tracePhase(){},newTraceID:()=>'fixture-trace',exports:{},...h.helpers,authSession:h.session,console:{warn(){}},Date:Clock,Promise,Error,Boolean,
   router:{currentRoute:{value:{name:'home',meta:{requiresAuth:true}}},replace:async route=>h.routes.push(route.name)},
   axios:{isAxiosError:e=>e?.isAxiosError===true},retryWithNextBaseURL:()=>null,
   shouldHandleUnauthorized:()=>true,clearRequestCache(){},setRequestCacheScope(){},
-  profileReads:noCache,conversationPinReads:noCache,userLastOnlineCache:noCache,groupMessagePinCache:noCache,groupAdminsCache:noCache,
+  profileReads:noCache,conversationPinReads:noCache,userLastOnlineCache:noCache,groupMessagePinCache:noCache,groupAdminsCache:noCache,memberFilterReads:noCache,
   toStatusErrorMessage:status=>`HTTP ${status}`,
   chatClient:{interceptors:{request:{use:fn=>h.request=fn},response:{use:(ok,bad)=>{h.response=ok;h.failure=bad;}}},request:async config=>{const sent=await h.request(config);h.replays.push(sent);return{status:200,config:sent};}},
  };
@@ -71,6 +72,38 @@ function harness(persisted, sharedStorage) {
  return h;
 }
 (async()=>{
+ {
+  const h=harness(),ready=deferred();h.sdk=()=>ready.promise;
+  const login=h.login();await flush();
+  assert(h.captured,'call transport capture installed before SDK_READY/login resolves');
+  assert(h.bridgeInstalled,'custom invitation listener installed before ready');
+  ready.resolve();await login;
+ }
+
+ { const h=harness();await h.login();const scope=h.callScope;assert(h.callActive());
+   await h.session.completePasswordChange('fixture-password');assert(h.callActive(),'password rotation preserves current IM call scope');assert.equal(h.callScope,scope);
+   await h.session.clearSession();assert(!h.callActive(),'logout invalidates prior IM scope'); }
+ { const h=harness();await h.login();const previous=h.callActive,scope=h.callScope;
+   await h.login();assert(!previous(),'new login invalidates the previous IM scope even for the same userSig');assert(h.callActive());assert.notEqual(h.callScope,scope);assert.equal(h.sdkLogins,2); }
+ // A hung/failed call UI integration never blocks IM readiness or login.
+ for (const fail of [false,true]) {
+  const h=harness();h.callInit=()=>fail?Promise.reject(Error('call chunk blocked')):new Promise(()=>{});
+  await h.login();assert.equal(h.session.state.chatStatus,'ready');assert(h.session.isAuthenticated.value);
+ }
+ // UserSig expiry renews IM separately; an unknown/network event keeps business login.
+ {
+  const h=harness();await h.login();const family=h.session.currentSession.value.sessionFamilyID;
+  await h.session.handleIMKicked('networkUnavailable',family);assert(h.session.isAuthenticated.value);
+  await h.session.handleIMKicked('userSigExpired',family);assert(h.refreshPayload.needUserSigRefresh);assert(h.session.isAuthenticated.value);
+  await h.session.handleIMKicked('multipleDevice','obsolete-family');assert(h.session.isAuthenticated.value);
+  await h.session.handleIMKicked('multipleDevice',family);assert.equal(h.session.isAuthenticated.value,false);
+ }
+ {
+  const h=harness();await h.login();h.refresh=async()=>{throw new h.helpers.ApiError('retry',{status:503,sessionStatus:'temporary',errorCode:'SESSION_TEMPORARY'});};
+  await assert.rejects(h.session.refreshCurrentSession({force:true}));assert(h.session.isAuthenticated.value);
+  assert.equal(h.helpers.isInvalidSessionError(new h.helpers.ApiError('gateway',{status:401,sessionStatus:'temporary'})),false);
+ }
+
  // Real 401 handler + refresh + interceptor: retain credentials on temporary errors.
  for(const status of [undefined,429,503]) {
   const h=harness();await h.login();h.refresh=async()=>{throw h.error(status);};

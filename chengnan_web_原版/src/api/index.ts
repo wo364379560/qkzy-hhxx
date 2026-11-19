@@ -1,3 +1,4 @@
+import { tracePhase, newTraceID } from "@/utils/networkDiagnostics";
 import { prepareAvatar } from "./avatarFile";
 import { uploadMultipart } from "./multipart";
 import axios from "axios";
@@ -132,6 +133,7 @@ const GROUP_MESSAGE_PIN_CACHE_TTL_MS = 5 * 60 * 1000;
 const GROUP_ADMINS_CACHE_TTL_MS = 2 * 60 * 1000;
 
 // Collapse concurrent component reads only; never retain permission/profile data.
+const memberFilterReads = createAsyncReadCache<FilterGroupMembersResult>({ ttlMs: 0 });
 const profileReads = createAsyncReadCache<ChatProfile>({ ttlMs: 0 });
 const conversationPinReads = createAsyncReadCache<ConversationCustomPin[]>({ ttlMs: 0 });
 let authToken: string | null = null;
@@ -170,12 +172,15 @@ chatClient.interceptors.request.use(async (config) => {
     return Promise.reject(new ApiError("登录账号已切换，请重新操作", { code: "SESSION_CHANGED" }));
   }
   requestConfig._authEpoch = authEpoch;
+  requestConfig._traceID ??= newTraceID();
+  const routeStarted = Date.now();
   requestConfig._deadline ??= Date.now() + Math.min(60_000, config.timeout || CHAT_API_TIMEOUT_MS);
   if (DYNAMIC_API_ROUTING) {
     // Public metadata refresh must not delay an available business route.
     // Actual route recovery below still shares the request's original deadline.
     void domainPool.refresh().catch(() => {});
-    await waitWithinDeadline(domainPool.waitForRecovery(), requestConfig._deadline);
+    try { await waitWithinDeadline(domainPool.waitForRecovery(), requestConfig._deadline); }
+    catch (error) { tracePhase('route_failed', routeStarted, { requestId: requestConfig._traceID }); throw error; }
     if (requestConfig._authEpoch !== authEpoch) throw new ApiError("登录账号已切换，请重新操作", { code: "SESSION_CHANGED" });
     const pool = domainPool.snapshot();
     if (!requestConfig._routeRetry || !config.baseURL || !pool.origins.includes(new URL(config.baseURL).origin)) {
@@ -188,6 +193,8 @@ chatClient.interceptors.request.use(async (config) => {
   // Share one deadline across bootstrap, route retry and the existing auth refresh.
   config.timeout = config.method?.toLowerCase() === "get" && !requestConfig._routeRetry
     ? Math.max(1, Math.floor(remaining / 2)) : remaining;
+  tracePhase('route_wait', routeStarted, { requestId: requestConfig._traceID, origin: config.baseURL });
+  requestConfig._sentAt = Date.now();
   requestConfig._authToken = authToken;
   if (authToken) {
     config.headers = { ...config.headers, Authorization: `Bearer ${authToken}` };
@@ -199,6 +206,10 @@ chatClient.interceptors.request.use(async (config) => {
 
 chatClient.interceptors.response.use(
   (response) => {
+    const diagnostic = response.config as any;
+    const serverID = response.headers?.['x-request-id'];
+    tracePhase('response', diagnostic._sentAt || Date.now(), { requestId: diagnostic._traceID, serverRequestId: serverID,
+      origin: diagnostic.baseURL, status: response.status, code: response.data?.code });
     if ((response.config as any)._authEpoch !== authEpoch) {
       return Promise.reject(new ApiError("登录账号已切换，请重新操作", { code: "SESSION_CHANGED" }));
     }
@@ -210,6 +221,9 @@ chatClient.interceptors.response.use(
   },
   async (error) => {
     const requestConfig = error.config as any;
+    const serverID = error.response?.headers?.['x-request-id'];
+    if (requestConfig) tracePhase(error.response ? 'response' : 'browser_network', requestConfig._sentAt || Date.now(),
+      { requestId: requestConfig._traceID, serverRequestId: serverID, origin: requestConfig.baseURL, status: error.response?.status, code: error.response?.data?.code });
     if (requestConfig && requestConfig._authEpoch !== authEpoch) return Promise.reject(error);
 
     if (DYNAMIC_API_ROUTING && axios.isAxiosError(error) && requestConfig &&
@@ -278,6 +292,7 @@ export function setChatAuthToken(token: string | null, context: string | null = 
   userLastOnlineCache.clear();
   groupMessagePinCache.clear();
   groupAdminsCache.clear();
+  memberFilterReads.clear();
 }
 
 export function setChatUnauthorizedHandler(
@@ -677,20 +692,18 @@ export type FilterGroupMembersResult = {
 };
 
 export async function filterGroupMembers(groupID: string, userIDs: string[]) {
+  const ids = [...new Set(userIDs)].sort();
   try {
-    const { data } = await chatClient.post<ApiResponse<FilterGroupMembersResult>>(
-      `/groups/${encodeURIComponent(groupID)}/members/filter`,
-      {
-        user_ids: userIDs,
-      }
-    );
-    return unwrapResponse(data);
-  } catch (error) {
-    throw toApiError(error);
-  }
+    return await memberFilterReads.get(JSON.stringify([groupID, ids]), async () => {
+      const { data } = await chatClient.post<ApiResponse<FilterGroupMembersResult>>(
+        `/groups/${encodeURIComponent(groupID)}/members/filter`, { user_ids: ids });
+      return unwrapResponse(data);
+    });
+  } catch (error) { throw toApiError(error); }
 }
 
 export async function addGroupMembers(groupID: string, userIDs: string[]) {
+  memberFilterReads.clear();
   try {
     const { data } = await chatClient.post<ApiResponse<AddGroupMembersResult>>(
       `/groups/${encodeURIComponent(groupID)}/members`,
@@ -701,17 +714,18 @@ export async function addGroupMembers(groupID: string, userIDs: string[]) {
     return unwrapResponse(data);
   } catch (error) {
     throw toApiError(error);
-  }
+  } finally { memberFilterReads.clear(); }
 }
 
 export async function removeGroupMember(groupID: string, userID: string) {
+  memberFilterReads.clear();
   try {
     await chatClient.delete(
       `/groups/${encodeURIComponent(groupID)}/members/${encodeURIComponent(userID)}`
     );
   } catch (error) {
     throw toApiError(error);
-  }
+  } finally { memberFilterReads.clear(); }
 }
 
 export async function muteGroupMember(groupID: string, userID: string) {

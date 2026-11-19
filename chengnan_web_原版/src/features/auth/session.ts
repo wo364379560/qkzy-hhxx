@@ -1,3 +1,5 @@
+import { imKickAction } from "./imEventPolicy";
+import { tracePhase, newTraceID } from "@/utils/networkDiagnostics";
 import { computed, reactive, readonly } from "vue";
 import { newSessionFamilyID, sameSessionFamily, sessionFamilyID, sessionRevision } from "./sessionLineage";
 import { createRefreshBackoff, isInvalidSessionError, withTimeout } from "./recovery";
@@ -65,6 +67,9 @@ const state = reactive<AuthSessionState>({
 let restorePromise: Promise<void> | null = null;
 let refreshPromise: { epoch: number; promise: Promise<boolean> } | null = null;
 let sessionEpoch = 0;
+// Business password rotation invalidates HTTP responses but preserves the same
+// IM connection; incoming-call lifetime follows login/logout, not token revision.
+let imSessionEpoch = 0;
 let sdkQueue: Promise<unknown> = Promise.resolve();
 let chatIdentity = "";
 let chatPromise: Promise<void> | null = null;
@@ -237,16 +242,18 @@ function ensureChatConnected() {
 
 function loginIM(session: ChatSessionRecord) {
   const epoch = sessionEpoch;
-  const identity = `${session.sdkAppID}:${session.userID}:${session.userSig}`;
+  const identity = `${imSessionEpoch}:${session.sdkAppID}:${session.userID}:${session.userSig}`;
   if (chatIdentity === identity && (chatPromise || state.chatStatus === 'ready')) return chatPromise || Promise.resolve();
   chatIdentity = identity;
   state.chatStatus = 'connecting';
+  const traceID = newTraceID();
+  const started = Date.now();
   const operation = sdkQueue.catch(() => {}).then(async () => {
     if (epoch !== sessionEpoch) return;
     try {
       await performLoginIM(session, epoch);
-      if (epoch === sessionEpoch) state.chatStatus = 'ready';
-    } catch (error) { if (epoch === sessionEpoch) state.chatStatus = 'error'; throw error; }
+      if (epoch === sessionEpoch) { state.chatStatus = 'ready'; tracePhase('im_ready', started, { requestId: traceID }); }
+    } catch (error) { if (epoch === sessionEpoch) state.chatStatus = 'error'; tracePhase('im_failed', started, { requestId: traceID }); throw error; }
   });
   sdkQueue = operation;
   const visible = withTimeout(operation, 12000);
@@ -259,27 +266,38 @@ function loginIM(session: ChatSessionRecord) {
 }
 
 async function performLoginIM(session: ChatSessionRecord, epoch: number) {
+  const imEpoch = imSessionEpoch;
+  const currentIM = () => imEpoch === imSessionEpoch && state.session?.userID === session.userID && state.session?.sdkAppID === session.sdkAppID;
   requireExpectedSDKAppID(session.sdkAppID);
   const TUILogin = await getTUILogin();
-  const [{ framework }, runtime, callRuntime] = await Promise.all([
+  const [{ framework }, runtime, callRuntime, bridge] = await Promise.all([
     import("@/TUIKit/adapter-vue"),
     import("@/bootstrap/chatRuntime"),
     import("@/bootstrap/callRuntime"),
+    import("@/features/call/doMattxCallBridge"),
   ]);
-  await callRuntime.prepareCallIntegration();
   if (epoch !== sessionEpoch) return;
   runtime.ensureChatRuntime();
   if (epoch !== sessionEpoch) return;
-  await TUILogin.login({
+  const imLogin = TUILogin.login({
     SDKAppID: session.sdkAppID,
     userID: session.userID,
     userSig: session.userSig,
     useUploadPlugin: true,
     framework,
   } as any);
+  // TUILogin 1.0 creates Chat synchronously, before network login/SDK_READY.
+  // Install transport capture in this same stack; never wait for login's extra
+  // 500ms SDK_READY delay before registering incoming invitation handlers.
+  const earlyChat = TUILogin.getContext().chat;
+  callRuntime.captureCallSignals(session, earlyChat, currentIM, imEpoch);
+  bridge.ensureDoMattxCallBridge(earlyChat);
+  await imLogin;
   if (epoch !== sessionEpoch) return;
   runtime.loginChatRuntime();
-  (await import("@/features/call/doMattxCallBridge")).ensureDoMattxCallBridge();
+  bridge.ensureDoMattxCallBridge();
+  void callRuntime.startCallIntegration(session, currentIM)
+    .catch(() => { console.warn("通话组件暂时不可用，普通聊天不受影响"); });
   try {
     await TUIUserService.switchUserStatus({ displayOnlineStatus: true });
   } catch (error) {
@@ -298,6 +316,7 @@ async function performLoginIM(session: ChatSessionRecord, epoch: number) {
 async function applyAuthResult(result: ChatAuthResult) {
   const nextSession = toSessionRecord(result);
   const epoch = ++sessionEpoch;
+  ++imSessionEpoch;
   resetRefreshRecovery();
   state.session = nextSession;
   syncPersistedSession(nextSession, { newLogin: true });
@@ -513,6 +532,7 @@ async function ensureInitialized() {
         const persisted = readPersistedSession();
         if (!persisted) return;
         ++sessionEpoch;
+        ++imSessionEpoch;
         state.session = persisted;
         syncPersistedSession(persisted);
         try { await refreshCurrentSession({ reloginIMIfUserSigChanges: false }); }
@@ -529,6 +549,25 @@ async function ensureInitialized() {
     })();
   }
   await restorePromise;
+}
+
+async function handleIMKicked(reason: string, expectedFamily: string) {
+  if (!state.session || sessionFamilyID(state.session) !== expectedFamily) return false;
+  const action = imKickAction(reason);
+  if (action === 'reauthenticate') {
+    await clearSession().catch(() => {});
+    return !state.session;
+  }
+  chatIdentity = '';
+  state.chatStatus = 'error';
+  state.recoveryStatus = 'unavailable';
+  if (action === 'renew-signature') {
+    try {
+      const renewed = await refreshCurrentSession({ force: true, requireUserSig: true, reloginIMIfUserSigChanges: false });
+      if (renewed && state.session && sessionFamilyID(state.session) === expectedFamily) await ensureChatConnected();
+    } catch { /* Temporary refresh failure keeps the business session and retry UI. */ }
+  }
+  return !state.session;
 }
 
 async function retryConnection() {
@@ -620,6 +659,7 @@ async function completeFirstSetup(nickname: string) {
 async function clearSession() {
   const clearedSession = state.session;
   ++sessionEpoch;
+  ++imSessionEpoch;
   resetRefreshRecovery();
   state.session = null;
   chatIdentity = "";
@@ -629,6 +669,7 @@ async function clearSession() {
   const cleanup = sdkQueue.catch(() => {}).then(async () => {
     try {
       await (await import("@/features/call/doMattxCallBridge")).disposeDoMattxCallBridge();
+      await (await import("@/bootstrap/callRuntime")).resetCallIntegration();
       const TUILogin = await getTUILogin();
       await TUILogin.logout();
       state.imLogoutStatus = "confirmed";
@@ -685,6 +726,7 @@ export function useAuthSession() {
     ensureChatConnected,
     refreshCurrentSession,
     retryConnection,
+    handleIMKicked,
     loginWithPassword,
     completeTOTPLogin,
     registerAccount,

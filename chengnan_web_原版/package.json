@@ -35,6 +35,7 @@
     "@tiptap/extension-text": "2.0.0-beta.220",
     "@tiptap/pm": "2.0.0-beta.220",
     "@tiptap/suggestion": "2.0.0-beta.220",
+    "@trtc/call-engine-lite-js": "3.4.8",
     "@trtc/calls-uikit-vue": "4.2.2",
     "@types/lodash": "^4.14.202",
     "axios": "^0.26.1",

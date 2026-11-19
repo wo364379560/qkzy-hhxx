@@ -6,6 +6,11 @@
   >
     <ReportDialogHost />
     <DoMattxCallOverlay />
+    <StandardCallKit v-if="callIntegrationState.loaded" />
+    <div v-if="callIntegrationState.status === 'loading' || callIntegrationState.status === 'error'" class="call-connection-status" role="status">
+      {{ callIntegrationState.status === 'loading' ? '通话连接中，聊天可正常使用' : '通话暂时不可用，聊天可正常使用' }}
+      <button v-if="callIntegrationState.status === 'error'" @click="retryCallIntegration().catch(() => {})">重试通话连接</button>
+    </div>
     <div class="home-container">
       <div
         v-if="isPC"
@@ -120,10 +125,12 @@
 import { ref, watch, onMounted, onUnmounted, defineAsyncComponent } from '../TUIKit/adapter-vue';
 import { TUIStore, StoreName } from '@tencentcloud/chat-uikit-engine-lite';
 import { isPC, isH5 } from '../TUIKit/utils/env';
+import { callIntegrationState, retryCallIntegration } from '@/bootstrap/callRuntime';
 import { ensureDoMattxCallBridge } from '@/features/call/doMattxCallBridge';
 import { bindCallHistoryOwner } from '@/features/call/localCallHistory';
 import { useAuthSession } from '@/features/auth/session';
 
+import StandardCallKit from '@/components/AsyncTUICallKit';
 const DoMattxCallOverlay = defineAsyncComponent(() => import('@/features/call/DoMattxCallOverlay.vue'));
 const TUIChat = defineAsyncComponent(() => import('../TUIKit/components/TUIChat'));
 const TUIConversation = defineAsyncComponent(() => import('../TUIKit/components/TUIConversation'));
@@ -202,3 +209,5 @@ onUnmounted(() => {
 <style lang="scss">
 @import "../styles/home";
 </style>
+
+<style scoped>.call-connection-status{position:fixed;right:12px;bottom:12px;z-index:50;padding:8px 12px;background:#fff7df;border-radius:6px;font-size:13px}.call-connection-status button{margin-left:8px}</style>

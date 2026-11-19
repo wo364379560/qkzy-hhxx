@@ -16,6 +16,7 @@
 import { ref, watch } from "vue";
 import { RouterView, useRouter } from "vue-router";
 import { setChatUnauthorizedHandler } from "@/api";
+import { sessionFamilyID } from "@/features/auth/sessionLineage";
 import { useAuthSession } from "@/features/auth/session";
 // import ConferenceMainView from '@tencentcloud/roomkit-web-vue3';
 const router = useRouter();
@@ -38,16 +39,17 @@ setChatUnauthorizedHandler(async () => {
 });
 
 watch(
-  () => authSession.currentSession.value?.userID,
-  async (userID) => {
-    if (!userID) {
+  () => authSession.currentSession.value ? sessionFamilyID(authSession.currentSession.value) : "",
+  async (family) => {
+    if (!family) {
       return;
     }
     const { ensureChatRuntime } = await import("@/bootstrap/chatRuntime");
+    if (!authSession.currentSession.value || sessionFamilyID(authSession.currentSession.value) !== family) return;
     ensureChatRuntime({
-      onKickedOut: async () => {
-        if (router.currentRoute.value.name !== "login") {
-          await authSession.clearSession();
+      onKickedOut: async (reason) => {
+        const needsLogin = await authSession.handleIMKicked(reason, family);
+        if (needsLogin && !authSession.currentSession.value && router.currentRoute.value.name !== "login") {
           await router.replace({ name: "login" });
         }
       },

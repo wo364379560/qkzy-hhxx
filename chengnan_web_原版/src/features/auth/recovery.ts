@@ -1,5 +1,7 @@
 /** Keep transport details after converting an Axios error to a user-facing error. */
 export class ApiError extends Error {
+  readonly sessionStatus?: string;
+  readonly errorCode?: string;
   readonly status?: number;
   readonly code?: string | number;
   readonly retryAfterMs?: number;
@@ -8,9 +10,11 @@ export class ApiError extends Error {
   readonly providerStatus?: number;
   readonly providerCode?: string;
 
-  constructor(message: string, details: { status?: number; code?: string | number; retryAfterMs?: number; stage?: string; requestId?: string; providerStatus?: number; providerCode?: string } = {}) {
+  constructor(message: string, details: { sessionStatus?: string; errorCode?: string; status?: number; code?: string | number; retryAfterMs?: number; stage?: string; requestId?: string; providerStatus?: number; providerCode?: string } = {}) {
     super(message);
     this.name = "ApiError";
+    this.sessionStatus = details.sessionStatus;
+    this.errorCode = details.errorCode;
     this.status = details.status;
     this.code = details.code;
     this.retryAfterMs = details.retryAfterMs;
@@ -28,6 +32,8 @@ export function apiErrorDetails(error: any) {
   const diagnostic = error?.response?.data?.data;
   return {
     ...(diagnostic?.stage ? { stage: String(diagnostic.stage), requestId: diagnostic.request_id, providerStatus: diagnostic.provider_status, providerCode: diagnostic.cos_code } : {}),
+    sessionStatus: diagnostic?.session_status as string | undefined,
+    errorCode: diagnostic?.error_code as string | undefined,
     status: error?.response?.status as number | undefined,
     code: error?.response?.data?.code ?? error?.code,
     retryAfterMs: Number.isFinite(retryAfterMs) ? retryAfterMs : undefined,
@@ -37,7 +43,9 @@ export function apiErrorDetails(error: any) {
 export function isInvalidSessionError(error: unknown) {
   // Only a rejected refresh credential is definitive. A business API 401 is
   // handled separately and can simply mean its short-lived access token expired.
-  return (error as ApiError)?.status === 401;
+  const failure = error as ApiError;
+  if (failure?.sessionStatus === 'temporary' || failure?.errorCode === 'SESSION_TEMPORARY') return false;
+  return failure?.status === 401 && (!failure.sessionStatus || failure.sessionStatus === 'invalid');
 }
 
 export function isRetryableSessionError(error: unknown) {
