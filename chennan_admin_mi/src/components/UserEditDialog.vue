@@ -313,7 +313,7 @@ const handleSaveWhitelist = async () => {
         <el-form :model="passwordForm" label-width="100px">
           <el-form-item label="重置方式">
             <el-radio-group v-model="passwordForm.mode">
-              <el-radio label="default">重置为默认密码 (123456)</el-radio>
+              <el-radio label="default">使用服务器配置的默认重置密码</el-radio>
               <el-radio label="set">设置指定密码</el-radio>
             </el-radio-group>
           </el-form-item>

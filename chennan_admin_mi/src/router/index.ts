@@ -20,6 +20,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'settings',        name: 'Settings',     component: () => import('@/views/SettingsView.vue') },
       { path: 'operation',        name: 'OperationCenter', component: () => import('@/views/OperationCenterView.vue'), meta: { superAdminOnly: true } },
       { path: 'operation/cleanup', name: 'CleanupRiskControl', component: () => import('@/views/CleanupRiskControlView.vue'), meta: { superAdminOnly: true } },
+      { path: 'operation/registration-ips', name: 'RegistrationIPs', component: () => import('@/views/RegistrationIPsView.vue'), meta: { superAdminOnly: true } },
       { path: 'operation/server-security', name: 'ServerSecurity', component: () => import('@/views/ServerSecurityView.vue'), meta: { superAdminOnly: true } },
       { path: 'ownership-operations', name: 'OwnershipOperations', component: () => import('@/views/OwnershipOperationsView.vue'), meta: { superAdminOnly: true } },
       { path: 'users',           name: 'Users',        component: () => import('@/views/UsersView.vue') },

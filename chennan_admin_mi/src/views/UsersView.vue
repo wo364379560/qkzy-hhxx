@@ -25,6 +25,7 @@ import {
   batchUnbanUsers,
   batchTransferUsers,
   batchSetUserCreateGroupPermission,
+  batchSetUserGlobalSearch,
   batchSaveUserIPWhitelist,
   syncUsersPreview,
   syncUsersConfirm,
@@ -883,6 +884,23 @@ async function handleToggleCreateGroupPermission(user: AppUser) {
   }
 }
 
+async function handleToggleGlobalSearch(user: AppUser) {
+  if (isDeletedUser(user)) return;
+  const enabled = !user.globallySearchable;
+  try {
+    await ElMessageBox.confirm(`确认${enabled ? '开启' : '关闭'}用户“${user.nickname}”的全局搜索？`, '全局搜索', { type: 'warning' });
+    const res = await batchSetUserGlobalSearch([user.id], enabled);
+    if (res.data.data.failed > 0) {
+      ElMessage.error('操作失败，请确认该用户在你的管理范围内');
+      return;
+    }
+    ElMessage.success(enabled ? '已开启全局搜索' : '已关闭全局搜索');
+    await fetchUsers();
+  } catch (e: any) {
+    if (e !== 'cancel' && e !== 'close') ElMessage.error(e.message || '操作失败');
+  }
+}
+
 async function handleEnableUserTOTP(user: AppUser) {
   await ElMessageBox.confirm(
     `确认开启用户 "${user.nickname}" 的 Google 验证？开启后该用户下次 Web 登录需绑定或校验动态码，App 登录暂不受影响。`,
@@ -977,6 +995,9 @@ function handleRowAction(command: { action: string; row: AppUser }) {
       return;
     case "ban":
       handleBan(row);
+      return;
+    case "globalSearch":
+      void handleToggleGlobalSearch(row);
       return;
     case "groupPermission":
       handleToggleCreateGroupPermission(row);
@@ -2489,6 +2510,12 @@ function whitelistStatusLabel(row: AppUser) {
                                 : "下次 Web 登录需绑定或校验动态码，App 暂不强制"
                             }}
                           </div>
+                        </div>
+                      </el-dropdown-item>
+                      <el-dropdown-item v-if="!isDeletedUser(row)" :command="{ action: 'globalSearch', row }">
+                        <div class="dropdown-item">
+                          <div class="dropdown-item-title">{{ row.globallySearchable ? '关闭全局搜索' : '开启全局搜索' }}</div>
+                          <div class="dropdown-item-desc">设置该用户能否被其他服务空间精确搜索</div>
                         </div>
                       </el-dropdown-item>
                       <el-dropdown-item
