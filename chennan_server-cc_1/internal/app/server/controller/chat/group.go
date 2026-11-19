@@ -9,6 +9,7 @@ import (
 	"github.com/ixayda/ix-Go/internal/app/server/model"
 	"github.com/ixayda/ix-Go/internal/app/server/repository"
 	"github.com/ixayda/ix-Go/internal/app/server/tencentim"
+	"github.com/ixayda/ix-Go/internal/pkg/datasource"
 	"github.com/ixayda/ix-Go/pkg/idgs"
 	"gorm.io/gorm"
 )
@@ -22,8 +23,8 @@ type SearchGroupResult struct {
 }
 
 // SearchGroup 在调用者同归属下按群组 ID 精确检索群组。
-func SearchGroup(_ context.Context, imUserID, groupID string) (*SearchGroupResult, error) {
-	userRepo := repository.NewUserRepository()
+func SearchGroup(ctx context.Context, imUserID, groupID string) (*SearchGroupResult, error) {
+	userRepo := repository.NewUserRepositoryWithDB(datasource.Datasource.Mysql.GetClient().WithContext(ctx))
 	caller, err := userRepo.FindByIMUserID(imUserID)
 	if err != nil {
 		return nil, err
@@ -34,7 +35,7 @@ func SearchGroup(_ context.Context, imUserID, groupID string) (*SearchGroupResul
 		return nil, nil
 	}
 
-	group, err := syncOwnedGroupSnapshot(caller.OwnerID, groupID)
+	group, err := syncOwnedGroupSnapshotContext(ctx, caller.OwnerID, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,11 @@ func SearchGroups(ctx context.Context, imUserID, keyword string) ([]SearchGroupR
 }
 
 func syncOwnedGroupSnapshot(expectedOwnerID uint, groupID string) (*model.Group, error) {
-	groupRepo := repository.NewGroupRepository()
+	return syncOwnedGroupSnapshotContext(context.Background(), expectedOwnerID, groupID)
+}
+
+func syncOwnedGroupSnapshotContext(ctx context.Context, expectedOwnerID uint, groupID string) (*model.Group, error) {
+	groupRepo := repository.NewGroupRepositoryWithDB(datasource.Datasource.Mysql.GetClient().WithContext(ctx))
 
 	localGroup, err := groupRepo.FindByIMGroupID(groupID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -103,7 +108,7 @@ func syncOwnedGroupSnapshot(expectedOwnerID uint, groupID string) (*model.Group,
 		return nil, nil
 	}
 
-	infoMap, err := imClient.GroupGetInfo([]string{groupID})
+	infoMap, err := imClient.GroupGetInfoContext(ctx, []string{groupID})
 	if err != nil {
 		if localGroup != nil && localGroup.OwnerID == expectedOwnerID {
 			return localGroup, nil
@@ -121,7 +126,7 @@ func syncOwnedGroupSnapshot(expectedOwnerID uint, groupID string) (*model.Group,
 		return nil, nil
 	}
 
-	userRepo := repository.NewUserRepository()
+	userRepo := repository.NewUserRepositoryWithDB(datasource.Datasource.Mysql.GetClient().WithContext(ctx))
 	ownerUser, err := userRepo.FindByIMUserID(ownerAccount)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

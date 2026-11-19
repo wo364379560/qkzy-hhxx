@@ -289,26 +289,34 @@ func RefreshSession(ctx context.Context, req RefreshReq) (*AuthResult, error) {
 	return refreshSessionWithDB(ctx, datasource.Datasource.Mysql.GetClient(), req)
 }
 
-func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*AuthResult, error) {
+func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (result *AuthResult, resultErr error) {
+	stage := "validate_request"
+	defer func() {
+		if resultErr != nil {
+			resultErr = classifyRefreshFailure(resultErr, stage)
+		}
+	}()
 	refreshToken := security.NormalizeRefreshToken(req.RefreshToken)
 	if refreshToken == "" {
-		return nil, AuthErr("refresh_token 不能为空")
+		return nil, refreshRejected("SESSION_INVALID")
 	}
 	normalizedMeta := normalizeSessionMeta(req.SessionMeta)
 	refreshTokenHash := security.HashRefreshToken(refreshToken)
 	shouldRefreshUserSig := shouldIssueUserSig(req)
 
-	var result *AuthResult
+	var rejection error
+	stage = "session_lookup"
 	err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		sessionRepo := repository.NewUserRefreshSessionRepositoryWithDB(tx)
 		session, err := sessionRepo.FindByTokenHashForUpdate(refreshTokenHash)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return AuthErr(refreshSessionInvalidMessage)
+				return refreshRejected("SESSION_INVALID")
 			}
 			return err
 		}
 
+		stage = "session_status"
 		now := time.Now()
 		if session.RevokedAt != nil || !session.ExpiresAt.After(now) {
 			if session.RevokedAt == nil && !session.ExpiresAt.After(now) {
@@ -316,16 +324,29 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 					return revokeErr
 				}
 			}
-			return AuthErr(refreshSessionInvalidMessage)
+			code := "SESSION_REVOKED"
+			if session.RevokedAt == nil {
+				code = "SESSION_EXPIRED"
+			}
+			rejection = refreshRejected(code)
+			return nil // Commit any expiry revocation, while returning no credentials.
 		}
+		stage = "rotation_recovery"
 		recoverToken, err := recoverRotatedRefreshToken(session, refreshTokenHash, normalizedMeta.DeviceID, now)
 		if err != nil {
 			return err
 		}
+		stage = "device_binding"
 		if err := validateRefreshSessionDeviceBinding(tx, session, normalizedMeta.DeviceID, now); err != nil {
+			var authErr AuthErr
+			if errors.As(err, &authErr) {
+				rejection = refreshRejected("SESSION_DEVICE_MISMATCH")
+				return nil // Persist the existing device-mismatch revocation policy.
+			}
 			return err
 		}
 
+		stage = "user_lookup"
 		user, err := repository.NewUserRepositoryWithDB(tx).FindByID(session.UserID)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -333,8 +354,9 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 			}
 			return err
 		}
+		stage = "account_policy"
 		if user.Status == "banned" || user.Status == "deleted" {
-			return AuthErr("账号已失效，请重新登录")
+			return refreshRejected("SESSION_POLICY_DENIED")
 		}
 		if err := ensureOwnerActiveWithDB(tx, user.OwnerID); err != nil {
 			return err
@@ -343,6 +365,7 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 			return err
 		}
 
+		stage = "issue_access_token"
 		accessToken, tokenExpiresAt, err := issueAccessToken(user)
 		if err != nil {
 			return err
@@ -358,6 +381,7 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 		}
 
 		if shouldRefreshUserSig {
+			stage = "issue_user_sig"
 			userSig, userSigExpiresAt, err := issueUserSig(user)
 			if err != nil {
 				return err
@@ -370,9 +394,11 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 		// or sliding expiry: repeated requests cannot keep a prior token alive.
 		if recoverToken != "" {
 			result.RefreshToken = recoverToken
+			stage = "commit"
 			return nil
 		}
 
+		stage = "rotate_session"
 		newRefreshToken, err := security.GenerateRefreshToken()
 		if err != nil {
 			return err
@@ -408,13 +434,16 @@ func refreshSessionWithDB(ctx context.Context, db *gorm.DB, req RefreshReq) (*Au
 			logger.Warnf("touch last_online_at after refresh failed: user_id=%d err=%v", user.ID, err)
 		}
 		result.RefreshToken = newRefreshToken
-
+		stage = "commit"
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
 
+	if rejection != nil {
+		return nil, rejection
+	}
 	return result, nil
 }
 

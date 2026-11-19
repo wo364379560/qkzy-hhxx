@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ixayda/ix-Go/internal/app/server/ratelimit"
+	"github.com/ixayda/ix-Go/internal/app/server/repository"
 	"github.com/ixayda/ix-Go/internal/pkg/clientip"
 	"github.com/ixayda/ix-Go/internal/pkg/handlers"
 )
@@ -34,6 +35,7 @@ type PublicPolicy struct {
 }
 
 type PublicProtectionOptions struct {
+	CheckRegistrationIP func(context.Context, string) (bool, error)
 	MaxBodyBytes        int64
 	MaxConcurrent       int
 	GlobalMaxConcurrent int
@@ -52,6 +54,10 @@ func PublicProtection(options ...PublicProtectionOptions) gin.HandlerFunc {
 	check := option.Check
 	if check == nil {
 		check = ratelimit.Check
+	}
+	checkRegistrationIP := option.CheckRegistrationIP
+	if checkRegistrationIP == nil {
+		checkRegistrationIP = repository.CheckRegistrationIP
 	}
 	globalMaxConcurrent := option.GlobalMaxConcurrent
 	if globalMaxConcurrent <= 0 {
@@ -137,6 +143,7 @@ func PublicProtection(options ...PublicProtectionOptions) gin.HandlerFunc {
 				Rules:   policy.SharedRules,
 			})
 		}
+		var deniedRegistrationIP *ratelimit.Decision
 		for _, item := range subjects {
 			if len(item.Rules) == 0 {
 				continue
@@ -153,6 +160,12 @@ func PublicProtection(options ...PublicProtectionOptions) gin.HandlerFunc {
 				return
 			}
 			if errors.Is(err, ratelimit.ErrLimited) || !decision.Allowed {
+				// Only this exact registration hourly rule can be exempted.
+				// Check all cheap global fuses before any allowlist DB lookup.
+				if policy.Action == "register" && decision.Rule.Scope == "route:register:public_register:ip:hour" {
+					deniedRegistrationIP = &decision
+					continue
+				}
 				ratelimit.LogLimited(policyLogAction(policy), item.Subject, ip, decision)
 				handlers.MarkAccessLogSampled(c)
 				c.Header("Retry-After", defaultRetryAfter)
@@ -160,6 +173,21 @@ func PublicProtection(options ...PublicProtectionOptions) gin.HandlerFunc {
 					"code":    http.StatusTooManyRequests,
 					"message": ratelimit.DefaultMessage,
 				})
+				return
+			}
+		}
+
+		if deniedRegistrationIP != nil {
+			exempt := false
+			if verifiedIP, verified := clientip.VerifiedProxyIP(c); verified && verifiedIP == ip {
+				allowed, err := checkRegistrationIP(c.Request.Context(), verifiedIP)
+				exempt = err == nil && allowed
+			}
+			if !exempt {
+				ratelimit.LogLimited(policyLogAction(policy), ratelimit.HashSubject("ip", ip), ip, *deniedRegistrationIP)
+				handlers.MarkAccessLogSampled(c)
+				c.Header("Retry-After", defaultRetryAfter)
+				c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"code": http.StatusTooManyRequests, "message": ratelimit.DefaultMessage})
 				return
 			}
 		}

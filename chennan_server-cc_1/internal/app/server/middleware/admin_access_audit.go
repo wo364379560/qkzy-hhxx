@@ -10,6 +10,12 @@ import (
 	"github.com/ixayda/ix-Go/internal/pkg/clientip"
 )
 
+const ctxAdminAccessAuditCommitted = "admin_access_audit_committed"
+
+// MarkAdminAccessAuditCommitted is only called after a mutation and its audit
+// commit atomically; denied/failed requests still use the usual access audit.
+func MarkAdminAccessAuditCommitted(c *gin.Context) { c.Set(ctxAdminAccessAuditCommitted, true) }
+
 const ctxAdminAccessFailureReason = "admin_access_failure_reason"
 const ctxAdminAccessActionDetail = "admin_access_action_detail"
 const ctxAdminAccessTargetType = "admin_access_target_type"
@@ -53,6 +59,9 @@ func SetAdminAccessChangeSet(c *gin.Context, changeSet string) {
 func AdminAccessAudit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
+		if c.GetBool(ctxAdminAccessAuditCommitted) && c.Writer.Status() >= 200 && c.Writer.Status() < 300 {
+			return
+		}
 
 		fullPath := c.FullPath()
 		if shouldSkipAdminAccessAudit(fullPath) {

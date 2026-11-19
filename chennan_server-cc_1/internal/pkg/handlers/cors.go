@@ -50,7 +50,7 @@ func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 
 		ctx.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		ctx.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, Origin, Accept, X-Requested-With")
-		ctx.Header("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+		ctx.Header("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-ID")
 		ctx.Header("Access-Control-Max-Age", "86400")
 
 		if ctx.Request.Method == http.MethodOptions {

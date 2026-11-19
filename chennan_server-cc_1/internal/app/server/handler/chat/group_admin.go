@@ -14,7 +14,7 @@ type addGroupAdminReq struct {
 func GetGroupAdmins(c *gin.Context) {
 	imUserID := c.GetString("im_user_id")
 	groupID := c.Param("group_id")
-	result, err := controller_chat.ListGroupAdmins(imUserID, groupID)
+	result, err := controller_chat.ListGroupAdminsContext(c.Request.Context(), imUserID, groupID)
 	if err != nil {
 		response.BadRequest(c, err.Error())
 		return

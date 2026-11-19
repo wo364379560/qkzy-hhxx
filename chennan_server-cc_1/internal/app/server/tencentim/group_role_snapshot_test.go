@@ -1,7 +1,9 @@
 package tencentim
 
 import (
+	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -32,10 +34,32 @@ func TestGroupRoleMirrorRequiresCompleteMemberSnapshot(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			page := 0
 			client := forwardTestClient(func(r *http.Request) (*http.Response, error) {
+				if strings.HasSuffix(r.URL.Path, "/get_group_info") {
+					return forwardReply(`{"ErrorCode":0,"GroupInfo":[{"GroupId":"test","Type":"Community"}]}`), nil
+				}
+				var request map[string]any
+				if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+					t.Fatal(err)
+				}
+				if _, ok := request["Offset"]; ok {
+					t.Fatal("Community used Offset")
+				}
+				if _, ok := request["Next"]; !ok {
+					t.Fatal("Community omitted Next")
+				}
 				if page >= len(tc.pages) {
 					t.Fatal("unexpected extra page request")
 				}
 				body := tc.pages[page]
+				var payload map[string]any
+				if err := json.Unmarshal([]byte(body), &payload); err != nil {
+					t.Fatal(err)
+				}
+				if _, ok := payload["Next"]; !ok {
+					payload["Next"] = ""
+				}
+				raw, _ := json.Marshal(payload)
+				body = string(raw)
 				page++
 				return forwardReply(body), nil
 			})

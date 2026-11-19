@@ -19,6 +19,7 @@ import (
 	"github.com/ixayda/ix-Go/internal/app/server/tencentim"
 	"github.com/ixayda/ix-Go/internal/app/server/usercache"
 	"github.com/ixayda/ix-Go/internal/pkg/authwork"
+	"github.com/ixayda/ix-Go/internal/pkg/config"
 	"github.com/ixayda/ix-Go/internal/pkg/datasource"
 	"github.com/ixayda/ix-Go/internal/pkg/idgen"
 	"github.com/ixayda/ix-Go/pkg/idgs"
@@ -1348,14 +1349,9 @@ func ResetUserPassword(userID, adminID uint, role string, req ResetUserPasswordR
 		return err
 	}
 
-	var password string
-	if req.Mode == "set" {
-		if req.NewPassword == nil || *req.NewPassword == "" {
-			return errors.New("新密码不能为空")
-		}
-		password = *req.NewPassword
-	} else {
-		password = "123456"
+	password, err := resolveUserResetPassword(req, config.Cfg.Get().App.AdminUserResetPassword)
+	if err != nil {
+		return err
 	}
 
 	hash, err := authwork.GeneratePrivateFromPassword([]byte(password), authwork.DefaultCost)
@@ -1780,4 +1776,20 @@ func genderTag(g int8) string {
 	default:
 		return "Gender_Type_Unknown"
 	}
+}
+
+func resolveUserResetPassword(req ResetUserPasswordReq, configured string) (string, error) {
+	if req.Mode == "set" {
+		if req.NewPassword == nil || *req.NewPassword == "" {
+			return "", errors.New("新密码不能为空")
+		}
+		return *req.NewPassword, nil
+	}
+	if req.Mode != "default" {
+		return "", errors.New("重置方式无效")
+	}
+	if len(configured) < 6 || len(configured) > 32 {
+		return "", errors.New("服务器未配置有效的默认重置密码，请指定新密码或联系运维")
+	}
+	return configured, nil
 }

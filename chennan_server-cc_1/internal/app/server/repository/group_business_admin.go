@@ -28,6 +28,10 @@ func NewGroupBusinessAdminRepository() *GroupBusinessAdminRepository {
 	return &GroupBusinessAdminRepository{db: datasource.Datasource.Mysql.GetClient()}
 }
 
+func NewGroupBusinessAdminRepositoryWithDB(db *gorm.DB) *GroupBusinessAdminRepository {
+	return &GroupBusinessAdminRepository{db: db}
+}
+
 func (r *GroupBusinessAdminRepository) ListActiveByGroup(groupID string) ([]model.GroupBusinessAdmin, error) {
 	groupID = strings.TrimSpace(groupID)
 	if groupID == "" {

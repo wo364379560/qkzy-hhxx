@@ -17,8 +17,9 @@ func Setup() error {
 
 	opts := Options{
 		App: App{
-			Addr: envStr("APP_ADDR", "127.0.0.1"),
-			Port: envStr("APP_PORT", "8080"),
+			AdminUserResetPassword: envStr("ADMIN_USER_RESET_PASSWORD", ""),
+			Addr:                   envStr("APP_ADDR", "127.0.0.1"),
+			Port:                   envStr("APP_PORT", "8080"),
 			CORSAllowedOrigins: envStrSlice("APP_CORS_ALLOWED_ORIGINS", []string{
 				"https://api.ruizhihe.com",
 				"https://api.prfgsu.com",

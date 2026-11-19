@@ -87,6 +87,8 @@ func RegisterAdmin(v1 *gin.RouterGroup) {
 	auth.POST("/cleanup/users/:id/restore", handler_admin.RestoreCleanupUser)
 	auth.GET("/login-risks", handler_admin.ListLoginRisks)
 	auth.POST("/login-risks/:id/resolve", handler_admin.ResolveLoginRisk)
+	auth.GET("/security/registration-ips", handler_admin.ListRegistrationIPs)
+	auth.POST("/security/registration-ips", middleware.AdminRateLimit("registration_ip_change", ratelimit.AdminPasswordWorkRules), handler_admin.ChangeRegistrationIP)
 	auth.GET("/security/ip-blocks", handler_admin.ListIPAccessBlocks)
 	auth.POST("/security/ip-blocks", handler_admin.BlockIP)
 	auth.POST("/security/ip-blocks/:id/unblock", handler_admin.UnblockIP)

@@ -49,7 +49,7 @@ var (
 		{Scope: "public_register:global:minute", Limit: 120, Window: time.Minute},
 	}
 	PublicRegisterIPRules = []Rule{
-		{Scope: "public_register:ip:hour", Limit: 10, Window: time.Hour},
+		{Scope: "public_register:ip:hour", Limit: 50, Window: time.Hour},
 	}
 	PublicRegisterPhoneRules = []Rule{
 		{Scope: "public_register:phone:hour", Limit: 5, Window: time.Hour},

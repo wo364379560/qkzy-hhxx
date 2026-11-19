@@ -1,11 +1,14 @@
 package handler_chat
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -16,6 +19,7 @@ import (
 	"github.com/ixayda/ix-Go/internal/pkg/config"
 	"github.com/ixayda/ix-Go/internal/pkg/turnstile"
 	"github.com/ixayda/ix-Go/pkg/base/response"
+	"github.com/ixayda/ix-Go/pkg/logger"
 )
 
 type sendSMSReq struct {
@@ -256,9 +260,14 @@ type refreshReq struct {
 
 // Refresh 使用 refresh token 换发新的 access token。
 func Refresh(c *gin.Context) {
+	started := time.Now()
+	var trace [16]byte
+	_, _ = rand.Read(trace[:])
+	requestID := hex.EncodeToString(trace[:])
+	c.Header("X-Request-ID", requestID)
 	var req refreshReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.InvalidParams(c, err.Error())
+		response.InvalidParams(c, "续签请求格式错误")
 		return
 	}
 	refreshToken := strings.TrimSpace(req.RefreshToken)
@@ -290,18 +299,21 @@ func Refresh(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		if authlimit.AbortIfAuthWorkBusy(c, err) {
-			return
-		}
-		var ae controller_chat.AuthErr
-		if errors.As(err, &ae) {
-			response.Unauthorized(c, ae.Error())
-			return
-		}
-		response.InternalError(c)
+		writeRefreshFailure(c, err, requestID, started)
 		return
 	}
 	response.OK(c, result)
+}
+
+func writeRefreshFailure(c *gin.Context, err error, requestID string, started time.Time) {
+	details := controller_chat.DescribeRefreshFailure(err)
+	logger.Warnf("auth_refresh request_id=%s stage=%s reason=%s elapsed_ms=%d", requestID, details.Stage, details.ErrorCode, time.Since(started).Milliseconds())
+	status, message := http.StatusUnauthorized, "登录状态已失效，请重新登录"
+	if details.Retryable {
+		status, message = http.StatusServiceUnavailable, "续签服务暂时不可用，请稍后重试"
+		c.Header("Retry-After", "1")
+	}
+	c.JSON(status, response.Response{Code: status, Message: message, Data: details})
 }
 
 type logoutReq struct {

@@ -1,7 +1,9 @@
 package tencentim
 
 import (
+	"context"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -177,6 +179,10 @@ type GroupListItem struct {
 
 // GroupGetInfo 批量获取群组信息（一次 API 最多 50 个）。
 func (c *Client) GroupGetInfo(groupIDs []string) (map[string]GroupInfo, error) {
+	return c.GroupGetInfoContext(context.Background(), groupIDs)
+}
+
+func (c *Client) GroupGetInfoContext(ctx context.Context, groupIDs []string) (map[string]GroupInfo, error) {
 	type req struct {
 		GroupIdList         []string `json:"GroupIdList"`
 		GroupBaseInfoFilter []string `json:"GroupBaseInfoFilter"`
@@ -196,7 +202,7 @@ func (c *Client) GroupGetInfo(groupIDs []string) (map[string]GroupInfo, error) {
 		GroupInfoList []groupItem `json:"GroupInfo"`
 	}
 	var resp respBody
-	if err := c.post(c.buildURL("group_open_http_svc", "get_group_info"), req{
+	if err := c.postContext(ctx, "group_open_http_svc", "get_group_info", req{
 		GroupIdList:         groupIDs,
 		GroupBaseInfoFilter: []string{"Name", "Type", "MemberNum", "Owner_Account", "ShutUpAllMember", "CreateTime"},
 	}, &resp); err != nil {
@@ -337,47 +343,69 @@ func (c *Client) GroupGetMembers(groupID string) ([]GroupMember, error) {
 	return members, nil
 }
 
-// GroupGetAllMembers 获取完整群成员列表。
+// GroupGetAllMembers always obtains a fresh complete snapshot; write-side
+// authorization must never consume the display request coalescer's state.
 func (c *Client) GroupGetAllMembers(groupID string) ([]GroupMember, error) {
+	return c.GroupGetAllMembersContext(context.Background(), groupID)
+}
+
+func (c *Client) GroupGetAllMembersContext(ctx context.Context, groupID string) ([]GroupMember, error) {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	info, err := c.GroupGetInfoContext(ctx, []string{groupID})
+	if err != nil {
+		return nil, err
+	}
+	group, ok := info[groupID]
+	if !ok {
+		return nil, errors.New("missing tencent group metadata")
+	}
+	switch group.Type {
+	case "Community", "Public", "Private", "Work", "ChatRoom", "Meeting":
+	default:
+		return nil, errors.New("unsupported tencent group member pagination")
+	}
+	return c.groupGetAllMembersForType(ctx, groupID, group.Type)
+}
+
+func (c *Client) groupGetAllMembersForType(ctx context.Context, groupID, groupType string) ([]GroupMember, error) {
 	type req struct {
 		GroupId          string   `json:"GroupId"`
 		MemberInfoFilter []string `json:"MemberInfoFilter"`
 		Limit            int      `json:"Limit"`
-		Offset           int      `json:"Offset,omitempty"`
-		Next             string   `json:"Next,omitempty"`
+		Offset           *int     `json:"Offset,omitempty"`
+		Next             *string  `json:"Next,omitempty"`
 	}
 	type memberItem struct {
-		Member_Account string `json:"Member_Account"`
-		Role           string `json:"Role"`
-		JoinTime       int64  `json:"JoinTime"`
-		MuteUntil      int64  `json:"MuteUntil"`
+		Account   string `json:"Member_Account"`
+		Role      string `json:"Role"`
+		JoinTime  int64  `json:"JoinTime"`
+		MuteUntil int64  `json:"MuteUntil"`
 	}
 	type respBody struct {
 		accountBaseResp
 		MemberList []memberItem `json:"MemberList"`
-		MemberNum  int          `json:"MemberNum"`
-		Next       string       `json:"Next"`
+		MemberNum  *int         `json:"MemberNum"`
+		Next       *string      `json:"Next"`
 	}
-
-	const limit = 100
+	const limit, maxPages = 100, 1000
+	community := groupType == "Community"
 	members := make([]GroupMember, 0)
 	seenMembers := make(map[string]struct{})
 	seenNext := make(map[string]struct{})
-	next := ""
-	offset := 0
-	for {
+	next, offset, expected := "", 0, -1
+	for page := 0; page < maxPages; page++ {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		var resp respBody
-		request := req{
-			GroupId:          groupID,
-			MemberInfoFilter: []string{"Account", "Role", "JoinTime", "MuteUntil"},
-			Limit:            limit,
-		}
-		if next != "" {
-			request.Next = next
+		request := req{GroupId: groupID, MemberInfoFilter: []string{"Role", "JoinTime", "MuteUntil"}, Limit: limit}
+		if community {
+			request.Next = &next
 		} else {
-			request.Offset = offset
+			request.Offset = &offset
 		}
-		if err := c.post(c.buildURL("group_open_http_svc", "get_group_member_info"), request, &resp); err != nil {
+		if err := c.postContext(ctx, "group_open_http_svc", "get_group_member_info", request, &resp); err != nil {
 			return nil, err
 		}
 		if err := resp.err(); err != nil {
@@ -386,45 +414,60 @@ func (c *Client) GroupGetAllMembers(groupID string) ([]GroupMember, error) {
 		if resp.MemberList == nil {
 			return nil, errors.New("missing tencent group member snapshot")
 		}
+		if resp.MemberNum != nil {
+			if *resp.MemberNum < 0 || (expected >= 0 && expected != *resp.MemberNum) {
+				return nil, errors.New("changed tencent group member snapshot")
+			}
+			expected = *resp.MemberNum
+		}
 		for _, m := range resp.MemberList {
-			if _, duplicate := seenMembers[m.Member_Account]; duplicate {
+			m.Account, m.Role = strings.TrimSpace(m.Account), strings.TrimSpace(m.Role)
+			if m.Account == "" || (m.Role != "Owner" && m.Role != "Admin" && m.Role != "Member") {
+				return nil, errors.New("invalid tencent group member snapshot")
+			}
+			if _, duplicate := seenMembers[m.Account]; duplicate {
 				return nil, errors.New("duplicate tencent group member snapshot")
 			}
-			seenMembers[m.Member_Account] = struct{}{}
-			members = append(members, GroupMember{
-				Account:   m.Member_Account,
-				Role:      m.Role,
-				JoinTime:  m.JoinTime,
-				MuteUntil: m.MuteUntil,
-			})
+			seenMembers[m.Account] = struct{}{}
+			members = append(members, GroupMember{Account: m.Account, Role: m.Role, JoinTime: m.JoinTime, MuteUntil: m.MuteUntil})
 		}
-		offset += len(resp.MemberList)
-		if len(resp.MemberList) == 0 {
-			if resp.Next != "" || resp.MemberNum > len(members) {
+		if expected >= 0 && len(members) > expected {
+			return nil, errors.New("changed tencent group member snapshot")
+		}
+		if community {
+			// Tencent requires Next even on the first request. Empty Next ends the
+			// scan regardless of page length; it must NEVER switch to Offset.
+			if resp.Next == nil {
+				return nil, errors.New("missing tencent group member cursor")
+			}
+			if *resp.Next == "" {
+				if expected >= 0 && len(members) != expected {
+					return nil, errors.New("incomplete tencent group member snapshot")
+				}
+				return members, nil
+			}
+			if len(resp.MemberList) == 0 {
 				return nil, errors.New("incomplete tencent group member snapshot")
 			}
-			break
-		}
-		if resp.Next != "" {
-			if _, repeated := seenNext[resp.Next]; repeated {
+			if _, repeated := seenNext[*resp.Next]; repeated {
 				return nil, errors.New("repeated tencent group member cursor")
 			}
-			seenNext[resp.Next] = struct{}{}
-			next = resp.Next
-			continue
-		}
-		if resp.MemberNum > 0 && len(members) >= resp.MemberNum {
-			break
-		}
-		if len(resp.MemberList) < limit {
-			if resp.MemberNum > len(members) {
-				return nil, errors.New("incomplete tencent group member snapshot")
+			seenNext[*resp.Next] = struct{}{}
+			next = *resp.Next
+		} else {
+			if resp.Next != nil && *resp.Next != "" {
+				return nil, errors.New("unexpected tencent group pagination mode")
 			}
-			break
+			if (expected >= 0 && len(members) == expected) || len(resp.MemberList) < limit {
+				if expected >= 0 && len(members) != expected {
+					return nil, errors.New("incomplete tencent group member snapshot")
+				}
+				return members, nil
+			}
+			offset += len(resp.MemberList)
 		}
-		next = ""
 	}
-	return members, nil
+	return nil, errors.New("tencent group member page limit exceeded")
 }
 
 // GroupSetMemberRole 修改群成员角色，role 可为 Admin 或 Member。

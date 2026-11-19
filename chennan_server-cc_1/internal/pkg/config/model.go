@@ -25,11 +25,12 @@ type JWT struct {
 }
 
 type App struct {
-	Addr               string
-	Port               string
-	CORSAllowedOrigins []string
-	TrustedProxyCIDRs  []string
-	RealIPHeaderOrder  []string
+	AdminUserResetPassword string
+	Addr                   string
+	Port                   string
+	CORSAllowedOrigins     []string
+	TrustedProxyCIDRs      []string
+	RealIPHeaderOrder      []string
 }
 
 var DefaultTrustedProxyCIDRs = []string{

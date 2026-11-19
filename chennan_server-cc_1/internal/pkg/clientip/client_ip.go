@@ -28,6 +28,42 @@ func FromContext(c *gin.Context) string {
 	return c.ClientIP()
 }
 
+// VerifiedProxyIP returns a single client address supplied by a configured trusted
+// reverse proxy. No RemoteAddr fallback or ambiguous forwarded chain can grant an
+// exception to a security rule. The proxy must overwrite this header at ingress.
+func VerifiedProxyIP(c *gin.Context) (string, bool) {
+	if c == nil {
+		return "", false
+	}
+	return verifiedProxyIP(c.Request, configuredOptions())
+}
+
+func verifiedProxyIP(r *http.Request, opts Options) (string, bool) {
+	if r == nil {
+		return "", false
+	}
+	peer := remoteAddrIP(r.RemoteAddr)
+	if !peer.IsValid() || !isTrustedProxy(peer, trustedProxyCIDRs(opts.TrustedProxyCIDRs)) {
+		return "", false
+	}
+	for _, header := range headerOrder(opts.HeaderOrder) {
+		value := strings.TrimSpace(r.Header.Get(header))
+		if value == "" {
+			continue
+		}
+		addr, err := netip.ParseAddr(value)
+		if err != nil || addr.Zone() != "" {
+			return "", false
+		}
+		addr = addr.Unmap()
+		if !isPublicClientIP(addr) {
+			return "", false
+		}
+		return addr.String(), true
+	}
+	return "", false
+}
+
 // FromRequest resolves a client IP from trusted proxy headers, then falls back to RemoteAddr.
 func FromRequest(r *http.Request, opts Options) string {
 	if r == nil {

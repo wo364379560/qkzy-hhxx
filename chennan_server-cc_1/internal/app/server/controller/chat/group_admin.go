@@ -4,11 +4,15 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/ixayda/ix-Go/internal/app/server/grouprolecache"
 	"github.com/ixayda/ix-Go/internal/app/server/model"
 	"github.com/ixayda/ix-Go/internal/app/server/repository"
 	"github.com/ixayda/ix-Go/internal/app/server/tencentim"
+	"github.com/ixayda/ix-Go/internal/pkg/datasource"
+	"github.com/ixayda/ix-Go/pkg/logger"
+	"gorm.io/gorm"
 )
 
 const (
@@ -35,22 +39,40 @@ type GroupAdminsResult struct {
 }
 
 func ListGroupAdmins(imUserID, groupID string) (*GroupAdminsResult, error) {
+	return ListGroupAdminsContext(context.Background(), imUserID, groupID)
+}
+
+func ListGroupAdminsContext(ctx context.Context, imUserID, groupID string) (*GroupAdminsResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+	defer cancel()
 	groupID = strings.TrimSpace(groupID)
 	if groupID == "" {
 		return nil, errors.New("group_id不能为空")
 	}
-	if err := ensureGroupVisibleToUser(imUserID, groupID); err != nil {
-		return nil, err
-	}
-
-	members, err := tencentim.NewClient().GroupGetAllMembers(groupID)
+	// Authorization remains per caller, outside the shared display-only read.
+	group, err := SearchGroup(ctx, imUserID, groupID)
 	if err != nil {
 		return nil, err
 	}
-	if err := syncTencentGroupAdminRoles(groupID, members, imUserID); err != nil {
-		return nil, err
+	if group == nil {
+		return nil, errors.New("群组不存在")
 	}
-	return buildGroupAdminsResult(groupID, members)
+	return groupAdminReads.load(ctx, groupID, func(readCtx context.Context) (*GroupAdminsResult, error) {
+		started := time.Now()
+		members, err := tencentim.NewClient().GroupGetAllMembersContext(readCtx, groupID)
+		upstreamMS := time.Since(started).Milliseconds()
+		if err != nil {
+			logger.Warnf("group_admin_read stage=tencent elapsed_ms=%d", upstreamMS)
+			return nil, err
+		}
+		db := datasource.Datasource.Mysql.GetClient().WithContext(readCtx)
+		if err := syncTencentGroupAdminRolesWithDB(db, groupID, members, imUserID); err != nil {
+			return nil, err
+		}
+		result, err := buildGroupAdminsResultWithDB(db, groupID, members)
+		logger.Infof("group_admin_read members=%d tencent_ms=%d db_ms=%d total_ms=%d", len(members), upstreamMS, time.Since(started).Milliseconds()-upstreamMS, time.Since(started).Milliseconds())
+		return result, err
+	})
 }
 
 func AddGroupAdmin(imUserID, groupID, targetUserID string) (*GroupAdminMemberResult, error) {
@@ -201,6 +223,9 @@ func ensureGroupVisibleToUser(imUserID, groupID string) error {
 }
 
 func buildGroupAdminsResult(groupID string, members []tencentim.GroupMember) (*GroupAdminsResult, error) {
+	return buildGroupAdminsResultWithDB(datasource.Datasource.Mysql.GetClient(), groupID, members)
+}
+func buildGroupAdminsResultWithDB(db *gorm.DB, groupID string, members []tencentim.GroupMember) (*GroupAdminsResult, error) {
 	memberMap := make(map[string]tencentim.GroupMember, len(members))
 	adminIDs := make([]string, 0)
 	enrichIDs := make([]string, 0, len(members))
@@ -221,7 +246,7 @@ func buildGroupAdminsResult(groupID string, members []tencentim.GroupMember) (*G
 		}
 	}
 
-	businessAdmins, err := repository.NewGroupBusinessAdminRepository().ListActiveByGroup(groupID)
+	businessAdmins, err := repository.NewGroupBusinessAdminRepositoryWithDB(db).ListActiveByGroup(groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -270,11 +295,14 @@ func buildGroupAdminsResult(groupID string, members []tencentim.GroupMember) (*G
 		enrichIDs = append(enrichIDs, userID)
 	}
 
-	enrichGroupAdminMembers(result, enrichIDs)
+	enrichGroupAdminMembersWithDB(db, result, enrichIDs)
 	return result, nil
 }
 
 func syncTencentGroupAdminRoles(groupID string, members []tencentim.GroupMember, updatedBy string) error {
+	return syncTencentGroupAdminRolesWithDB(datasource.Datasource.Mysql.GetClient(), groupID, members, updatedBy)
+}
+func syncTencentGroupAdminRolesWithDB(db *gorm.DB, groupID string, members []tencentim.GroupMember, updatedBy string) error {
 	roles := make(map[string]string, len(members))
 	for _, member := range members {
 		account := strings.TrimSpace(member.Account)
@@ -283,7 +311,7 @@ func syncTencentGroupAdminRoles(groupID string, members []tencentim.GroupMember,
 		}
 		roles[account] = strings.TrimSpace(member.Role)
 	}
-	if err := repository.NewGroupBusinessAdminRepository().SyncTencentRoles(groupID, roles, updatedBy, true); err != nil {
+	if err := repository.NewGroupBusinessAdminRepositoryWithDB(db).SyncTencentRoles(groupID, roles, updatedBy, true); err != nil {
 		return err
 	}
 	grouprolecache.InvalidateGroup(context.Background(), groupID)
@@ -303,8 +331,8 @@ func enrichGroupAdminMember(item GroupAdminMemberResult) (*GroupAdminMemberResul
 	return enriched, nil
 }
 
-func enrichGroupAdminMembers(result *GroupAdminsResult, userIDs []string) {
-	users, err := repository.NewUserRepository().FindByIMUserIDs(userIDs)
+func enrichGroupAdminMembersWithDB(db *gorm.DB, result *GroupAdminsResult, userIDs []string) {
+	users, err := repository.NewUserRepositoryWithDB(db).FindByIMUserIDs(userIDs)
 	if err != nil {
 		return
 	}
